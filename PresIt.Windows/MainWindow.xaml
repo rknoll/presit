@@ -1,0 +1,27 @@
+﻿<Window x:Class="PresIt.Windows.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="PresIt" Height="250" Width="450">
+    <Window.Resources>
+        <Style x:Key="FlatButtonStyle" BasedOn="{StaticResource {x:Static ToolBar.ButtonStyleKey}}" TargetType="Button">
+            <Setter Property="HorizontalAlignment" Value="Stretch" />
+            <Setter Property="VerticalAlignment" Value="Stretch" />
+            <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="BorderBrush" Value="Black" />
+            <Setter Property="Margin" Value="30" />
+            <Setter Property="Focusable" Value="False" />
+        </Style>
+    </Window.Resources>
+    <Grid>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition />
+            <ColumnDefinition />
+        </Grid.ColumnDefinitions>
+        <Button Command="{Binding NewPresentationCommand}" Drop="OnNewPresentationDrop" Style="{StaticResource FlatButtonStyle}" Grid.Column="0" AllowDrop="True">
+            <TextBlock TextAlignment="Center" TextWrapping="Wrap">Create a new Presentation</TextBlock>
+        </Button>
+        <Button Style="{StaticResource FlatButtonStyle}" Grid.Column="1">
+            <TextBlock TextAlignment="Center" TextWrapping="Wrap">Start a Presentation</TextBlock>
+        </Button>
+    </Grid>
+</Window>
