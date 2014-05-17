@@ -44,7 +44,7 @@
                     </GroupBox>
                 </WrapPanel>
             </Grid>
-            <Grid x:Name="LoginGrid"
+            <Grid x:Name="LoginGrid" Visibility="Hidden"
                   Height="{Binding RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type Canvas}}, Path=ActualHeight}"
                   Width="{Binding RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type Canvas}}, Path=ActualWidth}">
                 <GroupBox x:Name="LoginContent" Background="#666666">

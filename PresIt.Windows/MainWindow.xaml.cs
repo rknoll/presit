@@ -2,8 +2,9 @@
 using System.Threading;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Data;
 using System.Windows.Media.Animation;
-using System.Windows.Shapes;
+using System.IO;
 
 namespace PresIt.Windows {
     /// <summary>
@@ -24,11 +25,23 @@ namespace PresIt.Windows {
         private void OnNewPresentationDrop(object sender, DragEventArgs e) {
             if (!e.Data.GetDataPresent(DataFormats.FileDrop)) return;
             var files = (string[]) e.Data.GetData(DataFormats.FileDrop);
-            if (files.Length != 1) return;
-            var file = files[0];
+            if (files.Length != 1 || string.IsNullOrEmpty(files[0])) return;
+            var file = Path.GetFileName(files[0]);
+            if (string.IsNullOrEmpty(file)) return;
+            if (file.Contains(".")) {
+                file = file.Substring(0, file.LastIndexOf('.'));
+            }
+            var be = NewPresentationNameTextBox.GetBindingExpression(TextBox.TextProperty);
+            NewPresentationNameTextBox.Text = file;
+            if(be != null) be.UpdateSource();
+            ShowNewPresentation();
         }
 
         private void OnNewPresentationClick(object sender, RoutedEventArgs e) {
+            ShowNewPresentation();
+        }
+
+        private void ShowNewPresentation() {
             OverlayRectangle.Opacity = 0;
             OverlayRectangle.Visibility = Visibility.Visible;
             NewPresentationGrid.SetValue(Canvas.TopProperty, -NewPresentationContent.ActualHeight);

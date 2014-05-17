@@ -11,7 +11,7 @@ namespace PresIt.Android {
     [Activity(Label = "PresIt.Android", MainLauncher = true, Icon = "@drawable/icon")]
     public class Activity1 : Activity {
         public static readonly EndpointAddress EndPoint =
-            new EndpointAddress("http://192.168.20.2:9001/PresItService/"); //presit.noip.me
+            new EndpointAddress("http://presit.noip.me:9001/PresItService/"); //presit.noip.me
 
         private IPresItService service;
         private string uuid;
