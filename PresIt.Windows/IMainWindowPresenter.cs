@@ -1,7 +1,7 @@
-﻿using System.Windows.Input;
+﻿using System;
 
 namespace PresIt.Windows {
     public interface IMainWindowPresenter {
-        ICommand NewPresentationCommand { get; }
+        event EventHandler IsAuthenticated;
     }
 }

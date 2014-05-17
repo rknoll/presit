@@ -1,7 +1,7 @@
 ﻿<Window x:Class="PresIt.Windows.MainWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        Title="PresIt" Height="250" Width="450">
+        Title="PresIt" Height="250" Width="450" UseLayoutRounding="True" SourceInitialized="OnMainWindowSourceInitialized">
     <Window.Resources>
         <Style x:Key="FlatButtonStyle" BasedOn="{StaticResource {x:Static ToolBar.ButtonStyleKey}}" TargetType="Button">
             <Setter Property="HorizontalAlignment" Value="Stretch" />
@@ -13,15 +13,63 @@
         </Style>
     </Window.Resources>
     <Grid>
-        <Grid.ColumnDefinitions>
-            <ColumnDefinition />
-            <ColumnDefinition />
-        </Grid.ColumnDefinitions>
-        <Button Command="{Binding NewPresentationCommand}" Drop="OnNewPresentationDrop" Style="{StaticResource FlatButtonStyle}" Grid.Column="0" AllowDrop="True">
-            <TextBlock TextAlignment="Center" TextWrapping="Wrap">Create a new Presentation</TextBlock>
-        </Button>
-        <Button Style="{StaticResource FlatButtonStyle}" Grid.Column="1">
-            <TextBlock TextAlignment="Center" TextWrapping="Wrap">Start a Presentation</TextBlock>
-        </Button>
+        <Canvas ZIndex="1">
+            <Rectangle x:Name="OverlayRectangle"
+                       Height="{Binding RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type Canvas}}, Path=ActualHeight}"
+                       Width="{Binding RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type Canvas}}, Path=ActualWidth}"
+                       Fill="Black" Opacity="0.6" />
+            <Grid x:Name="NewPresentationGrid"
+                  Height="{Binding RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type Canvas}}, Path=ActualHeight}"
+                  Width="{Binding RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type Canvas}}, Path=ActualWidth}">
+                <WrapPanel x:Name="NewPresentationContent" HorizontalAlignment="Center" VerticalAlignment="Top">
+                    <GroupBox Background="#666666" Foreground="White" VerticalAlignment="Top">
+                        <GroupBox.Header>
+                            <TextBlock Padding="0 0 0 5" Text="New Presentation" Foreground="White" />
+                        </GroupBox.Header>
+                        <StackPanel>
+                            <Grid>
+                                <Grid.RowDefinitions>
+                                    <RowDefinition />
+                                    <RowDefinition />
+                                </Grid.RowDefinitions>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition />
+                                    <ColumnDefinition />
+                                </Grid.ColumnDefinitions>
+                                <Label Margin="0 0 10 0" Grid.Column="0" Grid.Row="0" Foreground="White">Name:</Label>
+                                <TextBox Text="{Binding NewPresentationName, UpdateSourceTrigger=PropertyChanged}" x:Name="NewPresentationNameTextBox" Margin="0 0 5 0" Grid.Column="1" Grid.Row="0" Width="150" />
+                                <Button Command="{Binding NewPresentationCommand}" CommandParameter="{Binding ElementName=NewPresentationNameTextBox, Path=Text}" Margin="0 10 5 5" Grid.Column="1" Grid.Row="1">Create</Button>
+                            </Grid>
+                        </StackPanel>
+                    </GroupBox>
+                </WrapPanel>
+            </Grid>
+            <Grid x:Name="LoginGrid"
+                  Height="{Binding RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type Canvas}}, Path=ActualHeight}"
+                  Width="{Binding RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type Canvas}}, Path=ActualWidth}">
+                <GroupBox x:Name="LoginContent" Background="#666666">
+                    <GroupBox.Header>
+                        <TextBlock Padding="0 0 0 5" Text="Login" Foreground="White" />
+                    </GroupBox.Header>
+                    <DockPanel LastChildFill="True" HorizontalAlignment="Stretch" VerticalAlignment="Stretch">
+                        <Label DockPanel.Dock="Top" HorizontalContentAlignment="Center" Foreground="White">Please Login by Scanning this Code</Label>
+                        <Image RenderOptions.EdgeMode="Aliased" Margin="10" RenderOptions.BitmapScalingMode="NearestNeighbor" SnapsToDevicePixels="True" Stretch="Uniform" StretchDirection="Both" Source="{Binding BarcodeImage}" />
+                    </DockPanel>
+                </GroupBox>
+            </Grid>
+        </Canvas>
+        <Grid ZIndex="0">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition />
+                <ColumnDefinition />
+            </Grid.ColumnDefinitions>
+            <Button Click="OnNewPresentationClick" Drop="OnNewPresentationDrop"
+                    Style="{StaticResource FlatButtonStyle}" Grid.Column="0" AllowDrop="True">
+                <TextBlock TextAlignment="Center" TextWrapping="Wrap">Create a new Presentation</TextBlock>
+            </Button>
+            <Button Style="{StaticResource FlatButtonStyle}" Grid.Column="1">
+                <TextBlock TextAlignment="Center" TextWrapping="Wrap">Start a Presentation</TextBlock>
+            </Button>
+        </Grid>
     </Grid>
 </Window>

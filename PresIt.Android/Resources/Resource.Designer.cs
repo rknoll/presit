@@ -26,6 +26,9 @@ namespace PresIt.Android
 		
 		public static void UpdateIdValues()
 		{
+			global::ZXing.Mobile.Resource.Id.contentFrame = global::PresIt.Android.Resource.Id.contentFrame;
+			global::ZXing.Mobile.Resource.Layout.zxingscanneractivitylayout = global::PresIt.Android.Resource.Layout.zxingscanneractivitylayout;
+			global::ZXing.Mobile.Resource.Layout.zxingscannerfragmentlayout = global::PresIt.Android.Resource.Layout.zxingscannerfragmentlayout;
 		}
 		
 		public partial class Attribute
@@ -66,6 +69,9 @@ namespace PresIt.Android
 			// aapt resource value: 0x7f060000
 			public const int MyButton = 2131099648;
 			
+			// aapt resource value: 0x7f060001
+			public const int contentFrame = 2131099649;
+			
 			static Id()
 			{
 				global::Android.Runtime.ResourceIdManager.UpdateIdValues();
@@ -81,6 +87,12 @@ namespace PresIt.Android
 			
 			// aapt resource value: 0x7f030000
 			public const int Main = 2130903040;
+			
+			// aapt resource value: 0x7f030001
+			public const int zxingscanneractivitylayout = 2130903041;
+			
+			// aapt resource value: 0x7f030002
+			public const int zxingscannerfragmentlayout = 2130903042;
 			
 			static Layout()
 			{
