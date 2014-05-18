@@ -4,15 +4,27 @@ using System.Drawing.Imaging;
 using System.IO;
 using System.Windows.Media.Imaging;
 using PresIt.Data;
+using PresIt.Windows.Properties;
 
 namespace PresIt.Windows {
     public class SlidePreview {
 
-        private readonly Slide slide;
+        private readonly string slideText;
         private readonly BitmapImage slideImage;
+        private readonly string presentationId;
 
-        public SlidePreview(Slide slide) {
-            this.slide = slide;
+        public SlidePreview(Slide slide, string presentationId, string text = null) {
+            if (text != null) {
+                slideText = text;
+            } else {
+                if (slide != null) {
+                    slideText = "" + slide.SlideNumber;
+                } else {
+                    slideText = "New Slide";
+                }
+            }
+
+            this.presentationId = presentationId;
 
             slideImage = new BitmapImage();
 
@@ -22,9 +34,25 @@ namespace PresIt.Windows {
                 slideImage.EndInit();
             } else {
 
-                var bitmap = new Bitmap(1024, 768);
-                var g = Graphics.FromImage(bitmap);
-                g.Clear(Color.LightGray);
+                Bitmap bitmap;
+
+                if (slide == null) {
+                    bitmap = new Bitmap(Resources.newSlide);
+                } else {
+                    bitmap = new Bitmap(1024, 768);
+                    var g = Graphics.FromImage(bitmap);
+                    switch (slide.SlideNumber) {
+                        case 1:
+                            g.Clear(Color.Red);
+                            break;
+                        case 2:
+                            g.Clear(Color.Blue);
+                            break;
+                        default:
+                            g.Clear(Color.LightGray);
+                            break;
+                    }
+                }
 
                 byte[] buffer;
 
@@ -36,6 +64,8 @@ namespace PresIt.Windows {
                     }
                 }
 
+                if (slide != null) slide.ImageData = buffer;
+
                 slideImage.BeginInit();
                 slideImage.StreamSource = new MemoryStream(buffer);
                 slideImage.EndInit();
@@ -43,12 +73,16 @@ namespace PresIt.Windows {
 
         }
 
-        public string SlideNumber {
-            get { return slide == null ? "New Slide" : ("" + slide.SlideNumber); }
+        public string SlideText {
+            get { return slideText; }
         }
 
         public BitmapImage SlideImage {
             get { return slideImage; }
+        }
+
+        public string PresentationId {
+            get { return presentationId; }
         }
     }
 }

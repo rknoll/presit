@@ -32,6 +32,21 @@ namespace PresIt.Service {
             return presentation;
         }
 
+        public bool DeletePresentation(string clientId, string presentationId) {
+            if (string.IsNullOrEmpty(clientId) || !authentications.ContainsKey(clientId)) return false;
+            if (string.IsNullOrEmpty(presentationId) || !presentations.ContainsKey(presentationId)) return false;
+            if (presentations[presentationId].Owner != authentications[clientId]) return false;
+            presentations.Remove(presentationId);
+            return true;
+        }
+
+        public Presentation GetPresentation(string clientId, string presentationId) {
+            if (string.IsNullOrEmpty(clientId) || !authentications.ContainsKey(clientId)) return null;
+            if (string.IsNullOrEmpty(presentationId) || !presentations.ContainsKey(presentationId)) return null;
+            if (presentations[presentationId].Owner != authentications[clientId]) return null;
+            return presentations[presentationId];
+        }
+
         public void AuthenticateId(string deviceId, string clientId) {
             if (string.IsNullOrEmpty(deviceId) || string.IsNullOrEmpty(clientId)) return;
             authentications[clientId] = deviceId;

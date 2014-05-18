@@ -1,9 +1,11 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Threading;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Data;
+using System.Windows.Input;
 using System.Windows.Media.Animation;
 using System.IO;
 using PresIt.Data;
@@ -14,6 +16,7 @@ namespace PresIt.Windows {
     /// </summary>
     public partial class MainWindow {
         private readonly SynchronizationContext context;
+        private IMainWindowPresenter dataContext;
 
         public MainWindow() {
             InitializeComponent();
@@ -112,6 +115,8 @@ namespace PresIt.Windows {
         }
 
         private void HideLoginScreen() {
+            CommandManager.InvalidateRequerySuggested();
+
             OverlayRectangle.Opacity = 0.6;
             OverlayRectangle.Visibility = Visibility.Visible;
 
@@ -147,26 +152,35 @@ namespace PresIt.Windows {
         }
 
         private void OnMainWindowSourceInitialized(object sender, EventArgs e) {
-            // get the data context and execute the shuffle command if possible
-            var dataContext = DataContext as IMainWindowPresenter;
+            dataContext = DataContext as IMainWindowPresenter;
             if (dataContext == null) return;
             dataContext.IsAuthenticated += (o, args) => context.Post(state => HideLoginScreen(), null);
             dataContext.EditPresentation += (o, pres) => context.Post(state => EditPresentation(pres), null);
+            dataContext.PresentationList += (o, pres) => context.Post(state => ShowSelectPresentation(pres), null);
+            dataContext.PresentationSaved += (o, pres) => context.Post(state => HideEditPresentation(), null);
+            dataContext.PresentationDeleted += (o, pres) => context.Post(state => HideEditPresentation(), null);
+            dataContext.ShowPresentation += (o, pres) => context.Post(state => ShowPresentation(pres), null);
+        }
+
+        private void HideEditPresentation() {
+            EditPresentationView.Visibility = Visibility.Hidden;
         }
 
         private void EditPresentation(Presentation pres) {
-            EditPresentationView.Visibility = Visibility.Visible;
-            EditPresentationName.Content = pres.Name;
+            if (pres != null) {
+                EditPresentationView.Visibility = Visibility.Visible;
+                EditPresentationName.Content = pres.Name;
 
-            var slides = new ObservableCollection<SlidePreview>();
+                var slides = new ObservableCollection<SlidePreview>();
 
-            foreach (var slide in pres.Slides) {
-                slides.Add(new SlidePreview(slide));
+                foreach (var slide in pres.Slides) {
+                    slides.Add(new SlidePreview(slide, pres.Id));
+                }
+
+                slides.Add(new SlidePreview(null, pres.Id));
+
+                EditPresentationSlides.ItemsSource = slides;
             }
-
-            slides.Add(new SlidePreview(null));
-
-            EditPresentationSlides.ItemsSource = slides;
 
             if (NewPresentationGrid.Visibility == Visibility.Visible) {
                 HideNewPresentationScreen();
@@ -176,9 +190,37 @@ namespace PresIt.Windows {
         private void OnCancelNewPresentationClick(object sender, RoutedEventArgs e) {
             HideNewPresentationScreen();
         }
+        
+        private void ShowSelectPresentation(IEnumerable<PresentationPreview> presentationList) {
+            SelectPresentationView.Visibility = Visibility.Visible;
 
-        private void ButtonBase_OnClick(object sender, RoutedEventArgs e) {
-            throw new NotImplementedException();
+            var presentations = new ObservableCollection<SlidePreview>();
+
+            foreach (var presentation in presentationList) {
+                presentations.Add(new SlidePreview(presentation.FirstSlide, presentation.Id, presentation.Name));
+            }
+
+            SelectPresentationList.ItemsSource = presentations;
+        }
+        
+        private void HideSelectPresentation() {
+            SelectPresentationView.Visibility = Visibility.Hidden;
+        }
+
+        private void OnCancelShowPresentationClick(object sender, RoutedEventArgs e) {
+            HideSelectPresentation();
+        }
+
+        private void OnSelectPresentationListDoubleClick(object sender, MouseButtonEventArgs e) {
+            var slidePreview = SelectPresentationList.SelectedItem as SlidePreview;
+            if (slidePreview == null || slidePreview.PresentationId == null) return;
+            dataContext.GetPresentation(slidePreview.PresentationId);
+        }
+
+        private void ShowPresentation(Presentation pres) {
+            var presentationView = new PresentationWindow();
+            presentationView.DataContext = pres;
+            presentationView.Show();
         }
     }
 }

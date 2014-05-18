@@ -1,0 +1,16 @@
+﻿<Window x:Class="PresIt.Windows.PresentationWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="PresentationWindow" Height="300" Width="300"
+        WindowStyle="None" ResizeMode="NoResize" Background="Black"
+        WindowStartupLocation="CenterScreen" WindowState="Maximized" SourceInitialized="OnPresentationWindowSourceInitialized"
+        KeyUp="OnPresentationWindowKeyUp">
+    <Canvas>
+        <Image x:Name="SlideImageView" Stretch="Uniform" StretchDirection="Both"
+                  Height="{Binding RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type Canvas}}, Path=ActualHeight}"
+                  Width="{Binding RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type Canvas}}, Path=ActualWidth}"/>
+        <Image x:Name="NextSlideImageView" Stretch="Uniform" StretchDirection="Both" Visibility="Hidden"
+                  Height="{Binding RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type Canvas}}, Path=ActualHeight}"
+                  Width="{Binding RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type Canvas}}, Path=ActualWidth}"/>
+    </Canvas>
+</Window>

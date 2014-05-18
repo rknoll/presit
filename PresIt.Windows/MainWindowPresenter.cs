@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.ComponentModel;
 using System.Drawing;
 using System.Drawing.Imaging;
@@ -22,8 +23,13 @@ namespace PresIt.Windows {
         private readonly string clientId;
 
         private ICommand newPresentationCommand;
+        private ICommand getPresentationsCommand;
+        private ICommand savePresentationCommand;
+        private ICommand deletePresentationCommand;
         private string newPresentationName;
         private IPresItService service;
+        private bool isAuthenticated;
+        private Presentation currentPresentation;
 
         public MainWindowPresenter() {
             InitializePresItServiceClient();
@@ -51,6 +57,7 @@ namespace PresIt.Windows {
                 while (true) {
                     try {
                         if (!service.IsAuthenticated(clientId)) continue;
+                        isAuthenticated = true;
                         if (IsAuthenticated != null) IsAuthenticated(this, EventArgs.Empty);
                         break;
                     } catch (TimeoutException) {
@@ -78,13 +85,51 @@ namespace PresIt.Windows {
                     var name = param as string;
                     if (name == null) return;
                     // create new plain presentation
-                    if (EditPresentation != null) EditPresentation(this, service.CreatePresentation(clientId, name));
+                    if (EditPresentation != null) {
+                        currentPresentation = service.CreatePresentation(clientId, name);
+                        CommandManager.InvalidateRequerySuggested();
+                        EditPresentation(this, currentPresentation);
+                    }
                 }, o => !string.IsNullOrEmpty(NewPresentationName)));
+            }
+        }
+        
+        public ICommand GetPresentationsCommand {
+            get {
+                return getPresentationsCommand ?? (getPresentationsCommand = new RelayCommand(param => {
+                    if (PresentationList != null) PresentationList(this, service.GetPresentationPreviews(clientId));
+                }, o => isAuthenticated));
+            }
+        }
+        
+        public ICommand SavePresentationCommand {
+            get {
+                return savePresentationCommand ?? (savePresentationCommand = new RelayCommand(param => {
+                    service.UpdateSlides(clientId, currentPresentation);
+                    if (PresentationSaved != null) PresentationSaved(this, null);
+                }, o => currentPresentation != null));
+            }
+        }
+
+        public ICommand DeletePresentationCommand {
+            get {
+                return deletePresentationCommand ?? (deletePresentationCommand = new RelayCommand(param => {
+                    service.DeletePresentation(clientId, currentPresentation.Id);
+                    if (PresentationDeleted != null) PresentationDeleted(this, null);
+                }, o => currentPresentation != null));
             }
         }
 
         public event EventHandler IsAuthenticated;
         public event EventHandler<Presentation> EditPresentation;
+        public event EventHandler<Presentation> ShowPresentation;
+        public event EventHandler<IEnumerable<PresentationPreview>> PresentationList;
+        public event EventHandler PresentationSaved;
+        public event EventHandler PresentationDeleted;
+
+        public void GetPresentation(string presentationId) {
+            if (ShowPresentation != null) ShowPresentation(this, service.GetPresentation(clientId, presentationId));
+        }
 
         public event PropertyChangedEventHandler PropertyChanged;
 

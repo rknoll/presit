@@ -15,11 +15,11 @@
     </Window.Resources>
     <Grid>
         <Canvas ZIndex="2">
-            <Rectangle x:Name="OverlayRectangle"
+            <Rectangle x:Name="OverlayRectangle" Visibility="Hidden"
                        Height="{Binding RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type Canvas}}, Path=ActualHeight}"
                        Width="{Binding RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type Canvas}}, Path=ActualWidth}"
                        Fill="Black" Opacity="0.6" />
-            <Grid x:Name="NewPresentationGrid"
+            <Grid x:Name="NewPresentationGrid" Visibility="Hidden"
                   Height="{Binding RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type Canvas}}, Path=ActualHeight}"
                   Width="{Binding RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type Canvas}}, Path=ActualWidth}">
                 <WrapPanel x:Name="NewPresentationContent" HorizontalAlignment="Center" VerticalAlignment="Top">
@@ -37,10 +37,10 @@
                                     <ColumnDefinition />
                                     <ColumnDefinition />
                                 </Grid.ColumnDefinitions>
-                                <Label Margin="0 0 10 0" Grid.Column="0" Grid.Row="0" Foreground="White">Name:</Label>
+                                <Label Margin="0 0 15 0" Grid.Column="0" Grid.Row="0" Foreground="White">Name:</Label>
                                 <TextBox Text="{Binding NewPresentationName, UpdateSourceTrigger=PropertyChanged}" x:Name="NewPresentationNameTextBox" Margin="0 0 5 0" Grid.Column="1" Grid.Row="0" Width="150" />
-                                <Button Click="OnCancelNewPresentationClick" Margin="0 10 5 5" Grid.Column="0" Grid.Row="1">Cancel</Button>
-                                <Button Command="{Binding NewPresentationCommand}" CommandParameter="{Binding ElementName=NewPresentationNameTextBox, Path=Text}" Margin="0 10 5 5" Grid.Column="1" Grid.Row="1">Create</Button>
+                                <Button Click="OnCancelNewPresentationClick" Padding="0 1 0 1" Margin="0 10 5 5" Grid.Column="0" Grid.Row="1">Cancel</Button>
+                                <Button Command="{Binding NewPresentationCommand}" Padding="0 1 0 1" CommandParameter="{Binding ElementName=NewPresentationNameTextBox, Path=Text}" Margin="0 10 5 5" Grid.Column="1" Grid.Row="1">Create</Button>
                             </Grid>
                         </StackPanel>
                     </GroupBox>
@@ -61,10 +61,12 @@
             </Grid>
         </Canvas>
 
-        <DockPanel x:Name="EditPresentationView" Background="White" ZIndex="1" Visibility="Collapsed">
+        <DockPanel x:Name="EditPresentationView" Background="White" ZIndex="1" Visibility="Hidden">
             <Label DockPanel.Dock="Top" x:Name="EditPresentationName" />
-            <Button DockPanel.Dock="Top" Click="ButtonBase_OnClick" />
-
+            <DockPanel DockPanel.Dock="Bottom" LastChildFill="False">
+                <Button DockPanel.Dock="Right" Padding="10 1 10 1" Command="{Binding SavePresentationCommand}">Save</Button>
+                <Button DockPanel.Dock="Left" Padding="10 1 10 1" Command="{Binding DeletePresentationCommand}">Delete</Button>
+            </DockPanel>
             <ListBox x:Name="EditPresentationSlides">
                 <ListBox.ItemsPanel>
                     <ItemsPanelTemplate>
@@ -83,7 +85,38 @@
                 <ListBox.ItemTemplate>
                     <DataTemplate DataType="windows:SlidePreview">
                         <DockPanel Margin="2">
-                            <Label DockPanel.Dock="Bottom" HorizontalContentAlignment="Center" Content="{Binding Path=SlideNumber}" />
+                            <Label DockPanel.Dock="Bottom" HorizontalContentAlignment="Center" Content="{Binding Path=SlideText}" />
+                            <Image Source="{Binding Path=SlideImage}" Stretch="Uniform" StretchDirection="Both" />
+                        </DockPanel>
+                    </DataTemplate>
+                </ListBox.ItemTemplate>
+            </ListBox>
+        </DockPanel>
+
+
+        <DockPanel x:Name="SelectPresentationView" Background="White" ZIndex="1" Visibility="Hidden">
+            <DockPanel DockPanel.Dock="Bottom" LastChildFill="False">
+                <Button DockPanel.Dock="Left" Padding="10 1 10 1" Click="OnCancelShowPresentationClick">Cancel</Button>
+            </DockPanel>
+            <ListBox x:Name="SelectPresentationList" MouseDoubleClick="OnSelectPresentationListDoubleClick">
+                <ListBox.ItemsPanel>
+                    <ItemsPanelTemplate>
+                        <StackPanel Orientation="Horizontal"/>
+                    </ItemsPanelTemplate>
+                </ListBox.ItemsPanel>
+
+                <ListBox.Template>
+                    <ControlTemplate TargetType="ItemsControl">
+                        <ScrollViewer HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Disabled">
+                            <ItemsPresenter/>
+                        </ScrollViewer>
+                    </ControlTemplate>
+                </ListBox.Template>
+
+                <ListBox.ItemTemplate>
+                    <DataTemplate DataType="windows:SlidePreview">
+                        <DockPanel Margin="2">
+                            <Label DockPanel.Dock="Bottom" HorizontalContentAlignment="Center" Content="{Binding Path=SlideText}" />
                             <Image Source="{Binding Path=SlideImage}" Stretch="Uniform" StretchDirection="Both" />
                         </DockPanel>
                     </DataTemplate>
@@ -100,7 +133,7 @@
                     Style="{StaticResource FlatButtonStyle}" Grid.Column="0" AllowDrop="True">
                 <TextBlock TextAlignment="Center" TextWrapping="Wrap">Create a new Presentation</TextBlock>
             </Button>
-            <Button Style="{StaticResource FlatButtonStyle}" Grid.Column="1">
+            <Button Style="{StaticResource FlatButtonStyle}" Grid.Column="1" Command="{Binding GetPresentationsCommand}">
                 <TextBlock TextAlignment="Center" TextWrapping="Wrap">Start a Presentation</TextBlock>
             </Button>
         </Grid>

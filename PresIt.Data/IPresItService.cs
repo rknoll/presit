@@ -11,6 +11,12 @@ namespace PresIt.Data {
         bool UpdateSlides(string clientId, Presentation presentation);
 
         [OperationContract]
+        bool DeletePresentation(string clientId, string presentationId);
+
+        [OperationContract]
+        Presentation GetPresentation(string clientId, string presentationId);
+
+        [OperationContract]
         void AuthenticateId(string deviceId, string clientId);
 
         [OperationContract]
