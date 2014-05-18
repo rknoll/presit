@@ -17,6 +17,7 @@ namespace PresIt.Windows {
     public partial class MainWindow {
         private readonly SynchronizationContext context;
         private IMainWindowPresenter dataContext;
+        private string droppedFileName;
 
         public MainWindow() {
             InitializeComponent();
@@ -29,11 +30,16 @@ namespace PresIt.Windows {
         }
 
         private void OnNewPresentationDrop(object sender, DragEventArgs e) {
+            droppedFileName = null;
             if (!e.Data.GetDataPresent(DataFormats.FileDrop)) return;
             var files = (string[]) e.Data.GetData(DataFormats.FileDrop);
             if (files.Length != 1 || string.IsNullOrEmpty(files[0])) return;
+            droppedFileName = files[0];
             var file = Path.GetFileName(files[0]);
-            if (string.IsNullOrEmpty(file)) return;
+            if (string.IsNullOrEmpty(file)) {
+                droppedFileName = null;
+                return;
+            }
             if (file.Contains(".")) {
                 file = file.Substring(0, file.LastIndexOf('.'));
             }
@@ -77,8 +83,12 @@ namespace PresIt.Windows {
             // start animation
             storyboard.Begin();
         }
-        
+
         private void HideNewPresentationScreen() {
+            droppedFileName = null;
+            var be = NewPresentationNameTextBox.GetBindingExpression(TextBox.TextProperty);
+            NewPresentationNameTextBox.Text = "";
+            if (be != null) be.UpdateSource();
             OverlayRectangle.Opacity = 0.6;
             OverlayRectangle.Visibility = Visibility.Visible;
             NewPresentationGrid.SetValue(Canvas.TopProperty, 0.0);
@@ -171,9 +181,34 @@ namespace PresIt.Windows {
                 EditPresentationView.Visibility = Visibility.Visible;
                 EditPresentationName.Content = pres.Name;
 
+                var importedSlides = new List<Slide>();
+                int slideNumber = 1;
+
+                if (pres.Slides != null) {
+                    foreach (var slide in pres.Slides) {
+                        slideNumber++;
+                        importedSlides.Add(slide);
+                    }
+                }
+
+                if (droppedFileName != null) {
+                    if (droppedFileName.EndsWith(".ppt") || droppedFileName.EndsWith(".pptx")) {
+                        var converter = new PowerPointImporter();
+
+                        foreach (var slideData in converter.Convert(droppedFileName)) {
+                            importedSlides.Add(new Slide {
+                                ImageData = slideData,
+                                SlideNumber = slideNumber++
+                            });
+                        }
+                    }
+                }
+                
+                pres.Slides = importedSlides;
+
                 var slides = new ObservableCollection<SlidePreview>();
 
-                foreach (var slide in pres.Slides) {
+                foreach (var slide in importedSlides) {
                     slides.Add(new SlidePreview(slide, pres.Id));
                 }
 

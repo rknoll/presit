@@ -18,7 +18,7 @@ namespace PresIt.Service {
             if (string.IsNullOrEmpty(name)) return null;
             if (presentations.Values.Any(p => p.Owner == authentications[clientId] && p.Name == name)) return null;
             var presentation = new Presentation { Name = name, Owner = authentications[clientId], Id = Guid.NewGuid().ToString() };
-
+            /*
             var slides = new List<Slide>();
             slides.Add(new Slide {
                 SlideNumber = 1
@@ -27,7 +27,7 @@ namespace PresIt.Service {
                 SlideNumber = 2
             });
             presentation.Slides = slides;
-
+            */
             presentations.Add(presentation.Id, presentation);
             return presentation;
         }
