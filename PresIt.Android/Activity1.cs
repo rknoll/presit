@@ -2,16 +2,18 @@
 using System.ServiceModel;
 using Android.App;
 using Android.Content;
+using Android.Graphics;
 using Android.OS;
 using Android.Preferences;
 using Android.Widget;
 using PresIt.Data;
+using System.Threading;
 
 namespace PresIt.Android {
     [Activity(Label = "PresIt.Android", MainLauncher = true, Icon = "@drawable/icon")]
     public class Activity1 : Activity {
         public static readonly EndpointAddress EndPoint =
-            new EndpointAddress("http://presit.noip.me:9001/PresItService/"); //presit.noip.me
+            new EndpointAddress("http://192.168.20.2:9001/PresItService/"); //presit.noip.me
 
         private IPresItService service;
         private string uuid;
@@ -52,9 +54,10 @@ namespace PresIt.Android {
                 var result = await scanner.Scan();
 
                 if (result != null) {
-                    service.AuthenticateId(uuid, result.Text);
+                    new Thread(() => service.AuthenticateId(uuid, result.Text)).Start();
                 }
             };
+
         }
 
         private void InitializePresItServiceClient() {

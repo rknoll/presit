@@ -16,7 +16,7 @@ using ZXing.QrCode;
 namespace PresIt.Windows {
     public class MainWindowPresenter : INotifyPropertyChanged, IMainWindowPresenter {
         public static readonly EndpointAddress EndPoint =
-            new EndpointAddress("http://presit.noip.me:9001/PresItService/"); // presit.noip.me
+            new EndpointAddress("http://localhost:9001/PresItService/"); // presit.noip.me
 
         private readonly BitmapImage barcodeImage;
         private readonly string clientId;
@@ -48,10 +48,14 @@ namespace PresIt.Windows {
             barcodeImage = img;
 
             new Thread(() => {
-                while (!service.IsAuthenticated(clientId)) {
-                    Thread.Sleep(1000);
+                while (true) {
+                    try {
+                        if (!service.IsAuthenticated(clientId)) continue;
+                        if (IsAuthenticated != null) IsAuthenticated(this, EventArgs.Empty);
+                        break;
+                    } catch (TimeoutException) {
+                    }
                 }
-                if (IsAuthenticated != null) IsAuthenticated(this, EventArgs.Empty);
             }).Start();
         }
 
@@ -74,13 +78,13 @@ namespace PresIt.Windows {
                     var name = param as string;
                     if (name == null) return;
                     // create new plain presentation
-                    Presentation p = service.CreatePresentation(clientId, name);
-                    MessageBox.Show(p.Name);
+                    if (EditPresentation != null) EditPresentation(this, service.CreatePresentation(clientId, name));
                 }, o => !string.IsNullOrEmpty(NewPresentationName)));
             }
         }
 
         public event EventHandler IsAuthenticated;
+        public event EventHandler<Presentation> EditPresentation;
 
         public event PropertyChangedEventHandler PropertyChanged;
 

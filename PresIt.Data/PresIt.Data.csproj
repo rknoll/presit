@@ -38,6 +38,7 @@
   <ItemGroup>
     <Compile Include="IPresItService.cs" />
     <Compile Include="Presentation.cs" />
+    <Compile Include="PresentationPreview.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Slide.cs" />
   </ItemGroup>

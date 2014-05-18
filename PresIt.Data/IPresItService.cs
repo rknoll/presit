@@ -1,4 +1,5 @@
-﻿using System.ServiceModel;
+﻿using System.Collections.Generic;
+using System.ServiceModel;
 
 namespace PresIt.Data {
     [ServiceContract]
@@ -14,5 +15,8 @@ namespace PresIt.Data {
 
         [OperationContract]
         bool IsAuthenticated(string clientId);
+
+        [OperationContract]
+        IEnumerable<PresentationPreview> GetPresentationPreviews(string clientId);
     }
 }
