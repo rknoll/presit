@@ -1,13 +1,13 @@
 ﻿<Properties>
   <MonoDevelop.Ide.Workspace ActiveConfiguration="Debug" />
-  <MonoDevelop.Ide.Workbench ActiveDocument="PresIt.Android\Activity1.cs">
-    <Files>
-      <File FileName="PresIt.Android\Activity1.cs" Line="9" Column="1" />
-    </Files>
-  </MonoDevelop.Ide.Workbench>
+  <MonoDevelop.Ide.Workbench />
   <MonoDevelop.Ide.DebuggingService.Breakpoints>
     <BreakpointStore />
   </MonoDevelop.Ide.DebuggingService.Breakpoints>
   <MonoDevelop.Ide.DebuggingService.PinnedWatches />
-  <MonoDevelop.Ide.ItemProperties.PresIt.Android />
+  <DisabledProjects>
+    <String>PresIt.Service/PresIt.Service.csproj</String>
+    <String>PresIt.Windows/PresIt.Windows.csproj</String>
+  </DisabledProjects>
+  <MonoDevelop.Ide.ItemProperties.PresIt.Android AndroidDeviceId-Debug="CB5A1XFDEQ" />
 </Properties>

@@ -8,6 +8,9 @@ using Android.Preferences;
 using Android.Widget;
 using PresIt.Data;
 using System.Threading;
+using Android.Bluetooth;
+using System.Linq;
+using Java.Lang;
 
 namespace PresIt.Android {
     [Activity(Label = "PresIt.Android", MainLauncher = true, Icon = "@drawable/icon")]
@@ -35,7 +38,7 @@ namespace PresIt.Android {
             // Set our view from the "main" layout resource
             SetContentView(Resource.Layout.Main);
 
-            InitializePresItServiceClient();
+			//InitializePresItServiceClient();
 
             // Get our button from the layout resource,
             // and attach an event to it
@@ -54,11 +57,75 @@ namespace PresIt.Android {
                 var result = await scanner.Scan();
 
                 if (result != null) {
-                    new Thread(() => service.AuthenticateId(uuid, result.Text)).Start();
+                    new System.Threading.Thread(() => service.AuthenticateId(uuid, result.Text)).Start();
                 }
             };
 
+			var adapter = BluetoothAdapter.DefaultAdapter;
+
+			if (adapter == null) {
+				AlertDialog alertMessage = new AlertDialog.Builder(this).Create();
+				alertMessage.SetTitle("PresIt");
+				alertMessage.SetMessage("No Bluetooth found..");
+				alertMessage.Show();
+				return;
+			}
+
+			if (!adapter.IsEnabled) {
+				AlertDialog alertMessage = new AlertDialog.Builder(this).Create();
+				alertMessage.SetTitle("PresIt");
+				alertMessage.SetMessage("Bluetooth disabled..");
+				alertMessage.Show();
+				return;
+			}
+
+			var device = adapter.BondedDevices.Where (d => d.Name.ToLower ().Contains ("squad")).FirstOrDefault ();
+
+			if (device == null) {
+				AlertDialog alertMessage = new AlertDialog.Builder(this).Create();
+				alertMessage.SetTitle("PresIt");
+				alertMessage.SetMessage("Bluetooth Device not found..");
+				alertMessage.Show();
+				return;
+			}
+
+			var socket = device.CreateRfcommSocketToServiceRecord(Java.Util.UUID.FromString("00001101-0000-1000-8000-00805f9b34fb"));
+			socket.Connect ();
+
+			new System.Threading.Thread (DeviceThread).Start(socket);
         }
+
+		private void DeviceThread(object s) {
+			var socket = s as BluetoothSocket;
+			if (socket == null) return;
+
+			short x, y, z;
+
+			while (true) {
+				var b = socket.InputStream.ReadByte ();
+				if (b == 2) {
+					b = socket.InputStream.ReadByte (); if (b < 0) continue; x = (short)(((short)b) << 8);
+					b = socket.InputStream.ReadByte (); if (b < 0) continue; x |= ((short)b);
+					b = socket.InputStream.ReadByte (); if (b < 0) continue; y = (short)(((short)b) << 8);
+					b = socket.InputStream.ReadByte (); if (b < 0) continue; y |= ((short)b);
+					b = socket.InputStream.ReadByte (); if (b < 0) continue; z = (short)(((short)b) << 8);
+					b = socket.InputStream.ReadByte (); if (b < 0) continue; z |= ((short)b);
+					b = socket.InputStream.ReadByte ();
+					if (b == 3) {
+						ReceivedPacket (x, y, z);
+					}
+				}
+
+
+			}
+
+		}
+
+		void ReceivedPacket (short x, short y, short z) {
+			RunOnUiThread (() => {
+				Toast.MakeText (this, string.Format ("X: {0}, Y: {1}, Z: {2}", x, y, z), ToastLength.Short).Show ();
+			});
+		}
 
         private void InitializePresItServiceClient() {
             BasicHttpBinding binding = CreateBasicHttp();
