@@ -1,13 +1,19 @@
 ﻿<Properties>
   <MonoDevelop.Ide.Workspace ActiveConfiguration="Debug" />
-  <MonoDevelop.Ide.Workbench />
+  <MonoDevelop.Ide.Workbench ActiveDocument="PresIt.Android/Activity1.cs">
+    <Files>
+      <File FileName="PresIt.Android/Activity1.cs" Line="57" Column="19" />
+    </Files>
+  </MonoDevelop.Ide.Workbench>
   <MonoDevelop.Ide.DebuggingService.Breakpoints>
-    <BreakpointStore />
+    <BreakpointStore>
+      <Breakpoint file="/Users/rknoll/Documents/presit/PresIt.Android/Activity1.cs" line="56" column="1" />
+    </BreakpointStore>
   </MonoDevelop.Ide.DebuggingService.Breakpoints>
   <MonoDevelop.Ide.DebuggingService.PinnedWatches />
   <DisabledProjects>
     <String>PresIt.Service/PresIt.Service.csproj</String>
     <String>PresIt.Windows/PresIt.Windows.csproj</String>
   </DisabledProjects>
-  <MonoDevelop.Ide.ItemProperties.PresIt.Android AndroidDeviceId-Debug="CB5A1XFDEQ" />
+  <MonoDevelop.Ide.ItemProperties.PresIt.Android AndroidDeviceId-Debug="CB5A1XFDEQ" MonoForAntroid.PreferredDevice="3.7&quot; WVGA (Nexus One)" />
 </Properties>

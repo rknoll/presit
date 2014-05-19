@@ -1,4 +1,4 @@
-﻿/*using System;
+﻿using System;
 using System.Collections.Generic;
 using System.IO;
 using Microsoft.Office.Core;
@@ -28,4 +28,4 @@ namespace PresIt.Windows {
             Directory.Delete(directoryName, true);
         }
     }
-}*/
+}

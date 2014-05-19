@@ -191,7 +191,7 @@ namespace PresIt.Windows {
             }
         }
 
-        private void ImportSlides() {
+        private void ImportSlides(int slideIndex = -1) {
             if (currentPresentation == null) return;
 
             var importedSlides = new List<Slide>();
@@ -208,7 +208,7 @@ namespace PresIt.Windows {
                 ISlidesImporter importer = null;
                 if (droppedFileName.ToLower().EndsWith(".ppt") ||
                     droppedFileName.ToLower().EndsWith(".pptx")) {
-                    //importer = new PowerPointImporter();
+                    importer = new PowerPointImporter();
                 } else if (droppedFileName.ToLower().EndsWith(".jpg") ||
                             droppedFileName.ToLower().EndsWith(".jpeg") ||
                             droppedFileName.ToLower().EndsWith(".png") ||
@@ -218,11 +218,18 @@ namespace PresIt.Windows {
 
                 if (importer != null) {
                     foreach (var slideData in importer.Convert(droppedFileName)) {
-                        importedSlides.Add(new Slide {
+                        importedSlides.Insert(slideIndex != -1 ? (slideIndex-1) : slideNumber-1, new Slide {
                             ImageData = slideData,
-                            SlideNumber = slideNumber++
+                            SlideNumber = slideIndex != -1 ? slideIndex++ : slideNumber++
                         });
+                        if (slideIndex != -1) slideNumber++;
                     }
+                }
+            }
+
+            if (slideIndex != -1) {
+                for (slideIndex--; slideIndex < slideNumber - 1; ++slideIndex) {
+                    importedSlides[slideIndex].SlideNumber = slideIndex + 1;
                 }
             }
 
@@ -294,7 +301,10 @@ namespace PresIt.Windows {
                 return;
             }
 
-            ImportSlides();
+            int slideIndex;
+            if (!int.TryParse(preview.SlideText, out slideIndex)) slideIndex = -1;
+
+            ImportSlides(slideIndex);
         }
     }
 }

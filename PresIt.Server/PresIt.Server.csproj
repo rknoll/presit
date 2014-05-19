@@ -58,6 +58,10 @@
       <Project>{ED565B3B-9078-485B-8020-169C15AA0740}</Project>
       <Name>PresIt.Data</Name>
     </ProjectReference>
+    <ProjectReference Include="..\PresIt.Service\PresIt.Service.csproj">
+      <Project>{15b3e0d2-6217-493a-a690-158c497f5318}</Project>
+      <Name>PresIt.Service</Name>
+    </ProjectReference>
   </ItemGroup>
   <ItemGroup>
     <None Include="app.config">

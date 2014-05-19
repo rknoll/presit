@@ -55,7 +55,7 @@ namespace PresIt.Service {
         public bool IsAuthenticated(string clientId) {
             if (string.IsNullOrEmpty(clientId)) return false;
 
-            AuthenticateId("dev", clientId);
+            //AuthenticateId("dev", clientId);
 
             if (authenticationRequests.ContainsKey(clientId)) authenticationRequests.Remove(clientId);
             if (authentications.ContainsKey(clientId)) return true;
@@ -81,8 +81,8 @@ namespace PresIt.Service {
 
         public void NextSlide(string deviceId) {
             if (string.IsNullOrEmpty(deviceId)) return;
-            if (!authentications.ContainsValue(deviceId)) return;
-            var clientId = authentications.First(pair => pair.Value == deviceId).Key;
+            var clientId = authentications.FirstOrDefault(pair => pair.Value == deviceId).Key;
+            if (clientId == null) return;
 
             if (commandRequests.ContainsKey(clientId)) {
                 commandRequests[clientId].CommandType = CommandType.NextSlide;
@@ -92,8 +92,8 @@ namespace PresIt.Service {
 
         public void PreviousSlide(string deviceId) {
             if (string.IsNullOrEmpty(deviceId)) return;
-            if (!authentications.ContainsValue(deviceId)) return;
-            var clientId = authentications.First(pair => pair.Value == deviceId).Key;
+            var clientId = authentications.FirstOrDefault(pair => pair.Value == deviceId).Key;
+            if (clientId == null) return;
 
             if (commandRequests.ContainsKey(clientId)) {
                 commandRequests[clientId].CommandType = CommandType.PreviousSlide;
@@ -106,7 +106,7 @@ namespace PresIt.Service {
             return presentations.Values.Where(p => p.Owner == authentications[clientId]).Select(presentation => new PresentationPreview {
                 Id = presentation.Id,
                 Name = presentation.Name,
-                FirstSlide = presentation.Slides.FirstOrDefault()
+                FirstSlide = presentation.Slides != null ? presentation.Slides.FirstOrDefault() : null
             });
         }
 
