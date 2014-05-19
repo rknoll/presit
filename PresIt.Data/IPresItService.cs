@@ -23,6 +23,15 @@ namespace PresIt.Data {
         bool IsAuthenticated(string clientId);
 
         [OperationContract]
+        CommandType GetNextCommand(string clientId);
+
+        [OperationContract]
+        void NextSlide(string deviceId);
+
+        [OperationContract]
+        void PreviousSlide(string deviceId);
+
+        [OperationContract]
         IEnumerable<PresentationPreview> GetPresentationPreviews(string clientId);
     }
 }

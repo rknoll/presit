@@ -9,68 +9,71 @@ using PresIt.Windows.Properties;
 namespace PresIt.Windows {
     public class SlidePreview {
 
-        private readonly string slideText;
-        private readonly BitmapImage slideImage;
-        private readonly string presentationId;
+        private string slideText;
+        private BitmapImage slideImage;
+        private string presentationId;
 
-        public SlidePreview(Slide slide, string presentationId, string text = null) {
-            if (text != null) {
-                slideText = text;
-            } else {
-                if (slide != null) {
-                    slideText = "" + slide.SlideNumber;
-                } else {
-                    slideText = "New Slide";
-                }
-            }
+        public static SlidePreview CreateFromSlide(Slide slide, string presentationId, string text = null) {
+            var preview = new SlidePreview();
+            preview.slideText = text ?? (slide != null ? ("" + slide.SlideNumber) : "1");
+            preview.presentationId = presentationId;
 
-            this.presentationId = presentationId;
+            preview.slideImage = new BitmapImage();
 
-            slideImage = new BitmapImage();
+            byte[] buffer;
 
-            if (slide != null && slide.ImageData != null) {
-                slideImage.BeginInit();
-                slideImage.StreamSource = new MemoryStream(slide.ImageData);
-                slideImage.EndInit();
-            } else {
-
-                Bitmap bitmap;
-
-                if (slide == null) {
-                    bitmap = new Bitmap(Resources.newSlide);
-                } else {
-                    bitmap = new Bitmap(1024, 768);
-                    var g = Graphics.FromImage(bitmap);
-                    switch (slide.SlideNumber) {
-                        case 1:
-                            g.Clear(Color.Red);
-                            break;
-                        case 2:
-                            g.Clear(Color.Blue);
-                            break;
-                        default:
-                            g.Clear(Color.LightGray);
-                            break;
-                    }
-                }
-
-                byte[] buffer;
+            if (slide == null || slide.ImageData == null) {
+                var bitmap = new Bitmap(1024, 768);
+                var g = Graphics.FromImage(bitmap);
+                g.Clear(Color.Transparent);
 
                 using (var memory = new MemoryStream()) {
                     bitmap.Save(memory, ImageFormat.Png);
                     memory.Position = 0;
                     using (var br = new BinaryReader(memory)) {
-                        buffer = br.ReadBytes((Int32)memory.Length);
+                        buffer = br.ReadBytes((Int32) memory.Length);
                     }
                 }
 
                 if (slide != null) slide.ImageData = buffer;
-
-                slideImage.BeginInit();
-                slideImage.StreamSource = new MemoryStream(buffer);
-                slideImage.EndInit();
+            } else {
+                buffer = slide.ImageData;
             }
 
+            preview.slideImage.BeginInit();
+            preview.slideImage.StreamSource = new MemoryStream(buffer);
+            preview.slideImage.EndInit();
+
+            return preview;
+        }
+
+        private SlidePreview() {
+        }
+
+        public static SlidePreview CreateAddNewSlide(string presentationId, string text = "New Slide") {
+            var preview = new SlidePreview();
+            preview.slideText = text;
+            preview.presentationId = presentationId;
+
+            preview.slideImage = new BitmapImage();
+
+            var bitmap = new Bitmap(Resources.newSlide);
+
+            byte[] buffer;
+
+            using (var memory = new MemoryStream()) {
+                bitmap.Save(memory, ImageFormat.Png);
+                memory.Position = 0;
+                using (var br = new BinaryReader(memory)) {
+                    buffer = br.ReadBytes((Int32)memory.Length);
+                }
+            }
+
+            preview.slideImage.BeginInit();
+            preview.slideImage.StreamSource = new MemoryStream(buffer);
+            preview.slideImage.EndInit();
+
+            return preview;
         }
 
         public string SlideText {

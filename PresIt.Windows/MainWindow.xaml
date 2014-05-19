@@ -86,7 +86,7 @@
                     <DataTemplate DataType="windows:SlidePreview">
                         <DockPanel Margin="2">
                             <Label DockPanel.Dock="Bottom" HorizontalContentAlignment="Center" Content="{Binding Path=SlideText}" />
-                            <Image Source="{Binding Path=SlideImage}" Stretch="Uniform" StretchDirection="Both" />
+                            <Image AllowDrop="True" Drop="OnEditPresentationSlideDrop" Source="{Binding Path=SlideImage}" Stretch="Uniform" StretchDirection="Both" />
                         </DockPanel>
                     </DataTemplate>
                 </ListBox.ItemTemplate>

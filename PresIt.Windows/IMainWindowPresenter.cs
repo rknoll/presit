@@ -11,6 +11,10 @@ namespace PresIt.Windows {
         event EventHandler PresentationSaved;
         event EventHandler PresentationDeleted;
 
-        void GetPresentation(string presentationId);
+        event EventHandler NextSlide;
+        event EventHandler PreviousSlide;
+
+        void StartPresentation(string presentationId);
+        void StopPresentation();
     }
 }

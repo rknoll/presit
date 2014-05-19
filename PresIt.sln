@@ -3,8 +3,8 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 2012
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PresIt.Service", "PresIt.Service\PresIt.Service.csproj", "{15B3E0D2-6217-493A-A690-158C497F5318}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PresIt.Android", "PresIt.Android\PresIt.Android.csproj", "{2B23AEAE-4C28-43FA-99EA-E9D1F09AD09A}"
-EndProject
+#Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PresIt.Android", "PresIt.Android\PresIt.Android.csproj", "{2B23AEAE-4C28-43FA-99EA-E9D1F09AD09A}"
+#EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PresIt.Windows", "PresIt.Windows\PresIt.Windows.csproj", "{9C4D3307-3507-43E1-9F34-A2B25E18EB8B}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PresIt.Data", "PresIt.Data\PresIt.Data.csproj", "{ED565B3B-9078-485B-8020-169C15AA0740}"

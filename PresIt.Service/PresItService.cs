@@ -9,25 +9,21 @@ namespace PresIt.Service {
     [ServiceBehavior(InstanceContextMode = InstanceContextMode.Single, ConcurrencyMode = ConcurrencyMode.Reentrant)]
     public class PresItService : IPresItService {
 
+        private class CommandRequest {
+            public AutoResetEvent CommandEvent { get; set; }
+            public CommandType CommandType { get; set; }
+        }
+
         private readonly Dictionary<string, Presentation> presentations = new Dictionary<string, Presentation>();
         private readonly Dictionary<string, string> authentications = new Dictionary<string, string>();
         private readonly Dictionary<string, AutoResetEvent> authenticationRequests = new Dictionary<string, AutoResetEvent>();
+        private readonly Dictionary<string, CommandRequest> commandRequests = new Dictionary<string, CommandRequest>();
 
         public Presentation CreatePresentation(string clientId, string name) {
             if (string.IsNullOrEmpty(clientId) || !authentications.ContainsKey(clientId)) return null;
             if (string.IsNullOrEmpty(name)) return null;
             if (presentations.Values.Any(p => p.Owner == authentications[clientId] && p.Name == name)) return null;
             var presentation = new Presentation { Name = name, Owner = authentications[clientId], Id = Guid.NewGuid().ToString() };
-            /*
-            var slides = new List<Slide>();
-            slides.Add(new Slide {
-                SlideNumber = 1
-            });
-            slides.Add(new Slide {
-                SlideNumber = 2
-            });
-            presentation.Slides = slides;
-            */
             presentations.Add(presentation.Id, presentation);
             return presentation;
         }
@@ -49,18 +45,60 @@ namespace PresIt.Service {
 
         public void AuthenticateId(string deviceId, string clientId) {
             if (string.IsNullOrEmpty(deviceId) || string.IsNullOrEmpty(clientId)) return;
+            if (authentications.ContainsValue(deviceId)) {
+                authentications.Remove(authentications.First(pair => pair.Value == deviceId).Key);
+            }
             authentications[clientId] = deviceId;
             if (authenticationRequests.ContainsKey(clientId)) authenticationRequests[clientId].Set();
         }
 
         public bool IsAuthenticated(string clientId) {
             if (string.IsNullOrEmpty(clientId)) return false;
+
+            AuthenticateId("dev", clientId);
+
             if (authenticationRequests.ContainsKey(clientId)) authenticationRequests.Remove(clientId);
             if (authentications.ContainsKey(clientId)) return true;
             authenticationRequests.Add(clientId, new AutoResetEvent(false));
             var success = authenticationRequests[clientId].WaitOne(new TimeSpan(0, 0, 10));
             authenticationRequests.Remove(clientId);
             return success;
+        }
+
+        public CommandType GetNextCommand(string clientId) {
+            if (string.IsNullOrEmpty(clientId)) return CommandType.Error;
+            if (!authentications.ContainsKey(clientId)) return CommandType.Error;
+            if (commandRequests.ContainsKey(clientId)) commandRequests.Remove(clientId);
+            commandRequests.Add(clientId, new CommandRequest {
+                CommandEvent = new AutoResetEvent(false),
+                CommandType = CommandType.None
+            });
+            commandRequests[clientId].CommandEvent.WaitOne(new TimeSpan(0, 0, 10));
+            var command = commandRequests[clientId].CommandType;
+            commandRequests.Remove(clientId);
+            return command;
+        }
+
+        public void NextSlide(string deviceId) {
+            if (string.IsNullOrEmpty(deviceId)) return;
+            if (!authentications.ContainsValue(deviceId)) return;
+            var clientId = authentications.First(pair => pair.Value == deviceId).Key;
+
+            if (commandRequests.ContainsKey(clientId)) {
+                commandRequests[clientId].CommandType = CommandType.NextSlide;
+                commandRequests[clientId].CommandEvent.Set();
+            }
+        }
+
+        public void PreviousSlide(string deviceId) {
+            if (string.IsNullOrEmpty(deviceId)) return;
+            if (!authentications.ContainsValue(deviceId)) return;
+            var clientId = authentications.First(pair => pair.Value == deviceId).Key;
+
+            if (commandRequests.ContainsKey(clientId)) {
+                commandRequests[clientId].CommandType = CommandType.PreviousSlide;
+                commandRequests[clientId].CommandEvent.Set();
+            }
         }
 
         public IEnumerable<PresentationPreview> GetPresentationPreviews(string clientId) {

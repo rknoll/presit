@@ -7,7 +7,6 @@ using System.IO;
 using System.Runtime.CompilerServices;
 using System.ServiceModel;
 using System.Threading;
-using System.Windows;
 using System.Windows.Input;
 using System.Windows.Media.Imaging;
 using PresIt.Data;
@@ -126,9 +125,42 @@ namespace PresIt.Windows {
         public event EventHandler<IEnumerable<PresentationPreview>> PresentationList;
         public event EventHandler PresentationSaved;
         public event EventHandler PresentationDeleted;
+        public event EventHandler NextSlide;
+        public event EventHandler PreviousSlide;
 
-        public void GetPresentation(string presentationId) {
-            if (ShowPresentation != null) ShowPresentation(this, service.GetPresentation(clientId, presentationId));
+        private Thread commandThread;
+
+        public void StartPresentation(string presentationId) {
+            if (ShowPresentation != null) {
+                ShowPresentation(this, service.GetPresentation(clientId, presentationId));
+                commandThread = new Thread(RequestNextCommand);
+                commandThread.Start();
+            }
+        }
+
+        private void RequestNextCommand() {
+            try {
+                while(true) {
+                    try {
+                        var command = service.GetNextCommand(clientId);
+                        switch (command) {
+                            case CommandType.Error:
+                                Thread.Sleep(1000);
+                                break;
+                            case CommandType.NextSlide:
+                                NextSlide(this, null);
+                                break;
+                            case CommandType.PreviousSlide:
+                                PreviousSlide(this, null);
+                                break;
+                        }
+                    } catch(TimeoutException) {}
+                }
+            } catch (ThreadAbortException) {}
+        }
+
+        public void StopPresentation() {
+            commandThread.Abort();
         }
 
         public event PropertyChangedEventHandler PropertyChanged;

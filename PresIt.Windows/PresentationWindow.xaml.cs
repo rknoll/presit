@@ -1,12 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel;
-using System.Linq;
 using System.Runtime.CompilerServices;
+using System.Threading;
 using System.Windows;
 using System.Windows.Input;
 using System.Windows.Media.Animation;
-using System.Windows.Media.Imaging;
 using PresIt.Data;
 using PresIt.Windows.Annotations;
 
@@ -22,8 +21,13 @@ namespace PresIt.Windows {
         private int currentSlideIndex;
         private int nextSlideIndex;
 
-        public PresentationWindow() {
+        private readonly SynchronizationContext context;
+
+        public PresentationWindow(IMainWindowPresenter dataContext) {
             InitializeComponent();
+            context = SynchronizationContext.Current;
+            dataContext.NextSlide += (o, args) => context.Post(state => NextSlide(), null);
+            dataContext.PreviousSlide += (o, pres) => context.Post(state => PreviousSlide(), null);
         }
 
         private void OnPresentationWindowSourceInitialized(object sender, EventArgs e) {
@@ -32,11 +36,11 @@ namespace PresIt.Windows {
             if (dataContext.Slides == null) return;
             slides = new List<SlidePreview>();
             foreach (var slide in dataContext.Slides) {
-                slides.Add(new SlidePreview(slide, dataContext.Id));
+                slides.Add(SlidePreview.CreateFromSlide(slide, dataContext.Id));
             }
-            if (slides.Count == 0) return;
             currentSlideIndex = 0;
             nextSlideIndex = -1;
+            if (slides.Count == 0) return;
             SlideImageView.Source = slides[currentSlideIndex].SlideImage;
         }
 

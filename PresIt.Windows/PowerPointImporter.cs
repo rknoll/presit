@@ -1,11 +1,11 @@
-﻿using System;
+﻿/*using System;
 using System.Collections.Generic;
 using System.IO;
 using Microsoft.Office.Core;
 using Microsoft.Office.Interop.PowerPoint;
 
 namespace PresIt.Windows {
-    class PowerPointImporter {
+    class PowerPointImporter : ISlidesImporter {
         public IEnumerable<byte[]> Convert(string filename) {
             var pptApplication = new Application();
             var pptPresentation = pptApplication.Presentations.Open(filename, MsoTriState.msoFalse, MsoTriState.msoFalse, MsoTriState.msoFalse);
@@ -28,4 +28,4 @@ namespace PresIt.Windows {
             Directory.Delete(directoryName, true);
         }
     }
-}
+}*/

@@ -18,6 +18,7 @@ namespace PresIt.Windows {
         private readonly SynchronizationContext context;
         private IMainWindowPresenter dataContext;
         private string droppedFileName;
+        private Presentation currentPresentation;
 
         public MainWindow() {
             InitializeComponent();
@@ -177,49 +178,65 @@ namespace PresIt.Windows {
         }
 
         private void EditPresentation(Presentation pres) {
+            currentPresentation = pres;
+
             if (pres != null) {
                 EditPresentationView.Visibility = Visibility.Visible;
                 EditPresentationName.Content = pres.Name;
-
-                var importedSlides = new List<Slide>();
-                int slideNumber = 1;
-
-                if (pres.Slides != null) {
-                    foreach (var slide in pres.Slides) {
-                        slideNumber++;
-                        importedSlides.Add(slide);
-                    }
-                }
-
-                if (droppedFileName != null) {
-                    if (droppedFileName.EndsWith(".ppt") || droppedFileName.EndsWith(".pptx")) {
-                        var converter = new PowerPointImporter();
-
-                        foreach (var slideData in converter.Convert(droppedFileName)) {
-                            importedSlides.Add(new Slide {
-                                ImageData = slideData,
-                                SlideNumber = slideNumber++
-                            });
-                        }
-                    }
-                }
-                
-                pres.Slides = importedSlides;
-
-                var slides = new ObservableCollection<SlidePreview>();
-
-                foreach (var slide in importedSlides) {
-                    slides.Add(new SlidePreview(slide, pres.Id));
-                }
-
-                slides.Add(new SlidePreview(null, pres.Id));
-
-                EditPresentationSlides.ItemsSource = slides;
+                ImportSlides();
             }
 
             if (NewPresentationGrid.Visibility == Visibility.Visible) {
                 HideNewPresentationScreen();
             }
+        }
+
+        private void ImportSlides() {
+            if (currentPresentation == null) return;
+
+            var importedSlides = new List<Slide>();
+            int slideNumber = 1;
+
+            if (currentPresentation.Slides != null) {
+                foreach (var slide in currentPresentation.Slides) {
+                    slideNumber++;
+                    importedSlides.Add(slide);
+                }
+            }
+
+            if (droppedFileName != null) {
+                ISlidesImporter importer = null;
+                if (droppedFileName.ToLower().EndsWith(".ppt") ||
+                    droppedFileName.ToLower().EndsWith(".pptx")) {
+                    //importer = new PowerPointImporter();
+                } else if (droppedFileName.ToLower().EndsWith(".jpg") ||
+                            droppedFileName.ToLower().EndsWith(".jpeg") ||
+                            droppedFileName.ToLower().EndsWith(".png") ||
+                            droppedFileName.ToLower().EndsWith(".bmp")) {
+                    importer = new ImageImporter();
+                }
+
+                if (importer != null) {
+                    foreach (var slideData in importer.Convert(droppedFileName)) {
+                        importedSlides.Add(new Slide {
+                            ImageData = slideData,
+                            SlideNumber = slideNumber++
+                        });
+                    }
+                }
+            }
+
+            currentPresentation.Slides = importedSlides;
+
+            var slides = new ObservableCollection<SlidePreview>();
+
+            foreach (var slide in importedSlides) {
+                slides.Add(SlidePreview.CreateFromSlide(slide, currentPresentation.Id));
+            }
+
+            slides.Add(SlidePreview.CreateAddNewSlide(currentPresentation.Id));
+
+            EditPresentationSlides.ItemsSource = slides;
         }
 
         private void OnCancelNewPresentationClick(object sender, RoutedEventArgs e) {
@@ -232,7 +249,7 @@ namespace PresIt.Windows {
             var presentations = new ObservableCollection<SlidePreview>();
 
             foreach (var presentation in presentationList) {
-                presentations.Add(new SlidePreview(presentation.FirstSlide, presentation.Id, presentation.Name));
+                presentations.Add(SlidePreview.CreateFromSlide(presentation.FirstSlide, presentation.Id, presentation.Name));
             }
 
             SelectPresentationList.ItemsSource = presentations;
@@ -249,13 +266,35 @@ namespace PresIt.Windows {
         private void OnSelectPresentationListDoubleClick(object sender, MouseButtonEventArgs e) {
             var slidePreview = SelectPresentationList.SelectedItem as SlidePreview;
             if (slidePreview == null || slidePreview.PresentationId == null) return;
-            dataContext.GetPresentation(slidePreview.PresentationId);
+            dataContext.StartPresentation(slidePreview.PresentationId);
         }
 
         private void ShowPresentation(Presentation pres) {
-            var presentationView = new PresentationWindow();
+            var presentationView = new PresentationWindow(dataContext);
             presentationView.DataContext = pres;
-            presentationView.Show();
+            presentationView.ShowDialog();
+            dataContext.StopPresentation();
+        }
+
+        private void OnEditPresentationSlideDrop(object sender, DragEventArgs e) {
+            if (currentPresentation == null) return;
+            var img = sender as Image;
+            if(img == null) return;
+            var preview = img.DataContext as SlidePreview;
+            if (preview == null) return;
+
+            droppedFileName = null;
+            if (!e.Data.GetDataPresent(DataFormats.FileDrop)) return;
+            var files = (string[]) e.Data.GetData(DataFormats.FileDrop);
+            if (files.Length != 1 || string.IsNullOrEmpty(files[0])) return;
+            droppedFileName = files[0];
+            var file = Path.GetFileName(files[0]);
+            if (string.IsNullOrEmpty(file)) {
+                droppedFileName = null;
+                return;
+            }
+
+            ImportSlides();
         }
     }
 }

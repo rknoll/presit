@@ -66,6 +66,8 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </ApplicationDefinition>
+    <Compile Include="ImageImporter.cs" />
+    <Compile Include="ISlidesImporter.cs" />
     <Compile Include="PowerPointImporter.cs" />
     <Compile Include="PresentationWindow.xaml.cs">
       <DependentUpon>PresentationWindow.xaml</DependentUpon>
