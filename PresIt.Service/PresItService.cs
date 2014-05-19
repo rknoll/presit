@@ -6,7 +6,7 @@ using System.Threading;
 using PresIt.Data;
 
 namespace PresIt.Service {
-    [ServiceBehavior(InstanceContextMode = InstanceContextMode.Single, ConcurrencyMode = ConcurrencyMode.Reentrant)]
+    [ServiceBehavior(InstanceContextMode = InstanceContextMode.Single, ConcurrencyMode = ConcurrencyMode.Multiple)]
     public class PresItService : IPresItService {
 
         private class CommandRequest {
