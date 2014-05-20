@@ -4,18 +4,18 @@
     android:layout_width="fill_parent"
     android:layout_height="fill_parent">
     <Button
-        android:id="@+id/MyButton"
+        android:id="@+id/AuthenticateButton"
         android:layout_width="fill_parent"
         android:layout_height="wrap_content"
-        android:text="@string/Hello" />
+        android:text="@string/AuthenticateButtonText" />
     <Button
-        android:text="Next Slide"
+        android:text="@string/NextSlideButtonText"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:id="@+id/button1" />
+        android:id="@+id/NextSlideButton" />
     <Button
-        android:text="Previous Slide"
+        android:text="@string/PreviousSlideButtonText"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:id="@+id/button2" />
+        android:id="@+id/PreviousSlideButton" />
 </LinearLayout>

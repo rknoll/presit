@@ -17,19 +17,19 @@ namespace PresIt.Data {
         Presentation GetPresentation(string clientId, string presentationId);
 
         [OperationContract]
-        void AuthenticateId(string deviceId, string clientId);
+        void AuthenticateId(string clientId, string sessionId);
 
         [OperationContract]
-        bool IsAuthenticated(string clientId);
+        string IsAuthenticated(string sessionId);
 
         [OperationContract]
         CommandType GetNextCommand(string clientId);
 
         [OperationContract]
-        void NextSlide(string deviceId);
+        void NextSlide(string clientId);
 
         [OperationContract]
-        void PreviousSlide(string deviceId);
+        void PreviousSlide(string clientId);
 
         [OperationContract]
         IEnumerable<PresentationPreview> GetPresentationPreviews(string clientId);

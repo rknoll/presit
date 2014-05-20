@@ -1,11 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel;
-using System.Drawing;
 using System.Drawing.Imaging;
 using System.IO;
 using System.Runtime.CompilerServices;
 using System.ServiceModel;
+using System.ServiceModel.Channels;
 using System.Threading;
 using System.Windows.Input;
 using System.Windows.Media.Imaging;
@@ -16,10 +16,10 @@ using ZXing.QrCode;
 namespace PresIt.Windows {
     public class MainWindowPresenter : INotifyPropertyChanged, IMainWindowPresenter {
         public static readonly EndpointAddress EndPoint =
-            new EndpointAddress("http://192.168.20.2:9001/PresItService/"); // presit.noip.me
+            new EndpointAddress("http://presit.noip.me:9001/PresItService/"); // presit.noip.me
 
         private readonly BitmapImage barcodeImage;
-        private readonly string clientId;
+        private string clientId;
 
         private ICommand newPresentationCommand;
         private ICommand getPresentationsCommand;
@@ -32,13 +32,14 @@ namespace PresIt.Windows {
 
         public MainWindowPresenter() {
             InitializePresItServiceClient();
-            clientId = Guid.NewGuid().ToString();
+            var sessionId = Guid.NewGuid().ToString();
 
             var writer = new BarcodeWriter {
                 Format = BarcodeFormat.QR_CODE,
                 Options = new QrCodeEncodingOptions {Margin = 1}
             };
-            Bitmap result = writer.Write(clientId);
+
+            var result = writer.Write(sessionId);
             var img = new BitmapImage();
 
             using (var memory = new MemoryStream()) {
@@ -55,7 +56,8 @@ namespace PresIt.Windows {
             new Thread(() => {
                 while (true) {
                     try {
-                        if (!service.IsAuthenticated(clientId)) continue;
+                        clientId = service.IsAuthenticated(sessionId);
+                        if (clientId == null) continue;
                         isAuthenticated = true;
                         if (IsAuthenticated != null) IsAuthenticated(this, EventArgs.Empty);
                         break;
@@ -139,24 +141,24 @@ namespace PresIt.Windows {
         }
 
         private void RequestNextCommand() {
-            try {
-                while(true) {
-                    try {
-                        var command = service.GetNextCommand(clientId);
-                        switch (command) {
-                            case CommandType.Error:
-                                Thread.Sleep(1000);
-                                break;
-                            case CommandType.NextSlide:
-                                NextSlide(this, null);
-                                break;
-                            case CommandType.PreviousSlide:
-                                PreviousSlide(this, null);
-                                break;
-                        }
-                    } catch(TimeoutException) {}
+            while(true) {
+                try {
+                    var command = service.GetNextCommand(clientId);
+                    switch (command) {
+                        case CommandType.Error:
+                            Thread.Sleep(1000);
+                            break;
+                        case CommandType.NextSlide:
+                            NextSlide(this, null);
+                            break;
+                        case CommandType.PreviousSlide:
+                            PreviousSlide(this, null);
+                            break;
+                    }
+                } catch (Exception e) {
+                    if (e is ThreadAbortException) break;
                 }
-            } catch (ThreadAbortException) {}
+            }
         }
 
         public void StopPresentation() {
@@ -166,12 +168,12 @@ namespace PresIt.Windows {
         public event PropertyChangedEventHandler PropertyChanged;
 
         private void InitializePresItServiceClient() {
-            BasicHttpBinding binding = CreateBasicHttp();
+            var binding = CreateBasicHttp();
             var factory = new ChannelFactory<IPresItService>(binding, EndPoint);
             service = factory.CreateChannel();
         }
 
-        private BasicHttpBinding CreateBasicHttp() {
+        private Binding CreateBasicHttp() {
             var binding = new BasicHttpBinding {
                 Name = "basicHttpBinding",
                 MaxBufferSize = 2147483647,

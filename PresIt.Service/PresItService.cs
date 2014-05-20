@@ -13,61 +13,60 @@ namespace PresIt.Service {
             public AutoResetEvent CommandEvent { get; set; }
             public CommandType CommandType { get; set; }
         }
+        
+        private class AuthenticationRequest {
+            public AutoResetEvent AuthenticationEvent { get; set; }
+            public string ClientId { get; set; }
+        }
 
         private readonly Dictionary<string, Presentation> presentations = new Dictionary<string, Presentation>();
-        private readonly Dictionary<string, string> authentications = new Dictionary<string, string>();
-        private readonly Dictionary<string, AutoResetEvent> authenticationRequests = new Dictionary<string, AutoResetEvent>();
+        private readonly Dictionary<string, AuthenticationRequest> authenticationRequests = new Dictionary<string, AuthenticationRequest>();
         private readonly Dictionary<string, CommandRequest> commandRequests = new Dictionary<string, CommandRequest>();
 
         public Presentation CreatePresentation(string clientId, string name) {
-            if (string.IsNullOrEmpty(clientId) || !authentications.ContainsKey(clientId)) return null;
+            if (string.IsNullOrEmpty(clientId)) return null;
             if (string.IsNullOrEmpty(name)) return null;
-            if (presentations.Values.Any(p => p.Owner == authentications[clientId] && p.Name == name)) return null;
-            var presentation = new Presentation { Name = name, Owner = authentications[clientId], Id = Guid.NewGuid().ToString() };
+            if (presentations.Values.Any(p => p.Owner == clientId && p.Name == name)) return null;
+            var presentation = new Presentation { Name = name, Owner = clientId, Id = Guid.NewGuid().ToString() };
             presentations.Add(presentation.Id, presentation);
             return presentation;
         }
 
         public bool DeletePresentation(string clientId, string presentationId) {
-            if (string.IsNullOrEmpty(clientId) || !authentications.ContainsKey(clientId)) return false;
+            if (string.IsNullOrEmpty(clientId)) return false;
             if (string.IsNullOrEmpty(presentationId) || !presentations.ContainsKey(presentationId)) return false;
-            if (presentations[presentationId].Owner != authentications[clientId]) return false;
+            if (presentations[presentationId].Owner != clientId) return false;
             presentations.Remove(presentationId);
             return true;
         }
 
         public Presentation GetPresentation(string clientId, string presentationId) {
-            if (string.IsNullOrEmpty(clientId) || !authentications.ContainsKey(clientId)) return null;
+            if (string.IsNullOrEmpty(clientId)) return null;
             if (string.IsNullOrEmpty(presentationId) || !presentations.ContainsKey(presentationId)) return null;
-            if (presentations[presentationId].Owner != authentications[clientId]) return null;
+            if (presentations[presentationId].Owner != clientId) return null;
             return presentations[presentationId];
         }
 
-        public void AuthenticateId(string deviceId, string clientId) {
-            if (string.IsNullOrEmpty(deviceId) || string.IsNullOrEmpty(clientId)) return;
-            if (authentications.ContainsValue(deviceId)) {
-                authentications.Remove(authentications.First(pair => pair.Value == deviceId).Key);
+        public void AuthenticateId(string clientId, string sessionId) {
+            if (string.IsNullOrEmpty(clientId) || string.IsNullOrEmpty(sessionId)) return;
+            if (authenticationRequests.ContainsKey(sessionId)) {
+                authenticationRequests[sessionId].ClientId = clientId;
+                authenticationRequests[sessionId].AuthenticationEvent.Set();
             }
-            authentications[clientId] = deviceId;
-            if (authenticationRequests.ContainsKey(clientId)) authenticationRequests[clientId].Set();
         }
 
-        public bool IsAuthenticated(string clientId) {
-            if (string.IsNullOrEmpty(clientId)) return false;
-
-            //AuthenticateId("dev", clientId);
-
-            if (authenticationRequests.ContainsKey(clientId)) authenticationRequests.Remove(clientId);
-            if (authentications.ContainsKey(clientId)) return true;
-            authenticationRequests.Add(clientId, new AutoResetEvent(false));
-            var success = authenticationRequests[clientId].WaitOne(new TimeSpan(0, 0, 10));
-            authenticationRequests.Remove(clientId);
-            return success;
+        public string IsAuthenticated(string sessionId) {
+            if (string.IsNullOrEmpty(sessionId)) return null;
+            if (authenticationRequests.ContainsKey(sessionId)) authenticationRequests.Remove(sessionId);
+            authenticationRequests.Add(sessionId, new AuthenticationRequest {AuthenticationEvent = new AutoResetEvent(false)});
+            var success = authenticationRequests[sessionId].AuthenticationEvent.WaitOne(new TimeSpan(0, 0, 10));
+            var clientId = success ? authenticationRequests[sessionId].ClientId : null;
+            authenticationRequests.Remove(sessionId);
+            return clientId;
         }
 
         public CommandType GetNextCommand(string clientId) {
             if (string.IsNullOrEmpty(clientId)) return CommandType.Error;
-            if (!authentications.ContainsKey(clientId)) return CommandType.Error;
             if (commandRequests.ContainsKey(clientId)) commandRequests.Remove(clientId);
             commandRequests.Add(clientId, new CommandRequest {
                 CommandEvent = new AutoResetEvent(false),
@@ -79,22 +78,16 @@ namespace PresIt.Service {
             return command;
         }
 
-        public void NextSlide(string deviceId) {
-            if (string.IsNullOrEmpty(deviceId)) return;
-            var clientId = authentications.FirstOrDefault(pair => pair.Value == deviceId).Key;
-            if (clientId == null) return;
-
+        public void NextSlide(string clientId) {
+            if (string.IsNullOrEmpty(clientId)) return;
             if (commandRequests.ContainsKey(clientId)) {
                 commandRequests[clientId].CommandType = CommandType.NextSlide;
                 commandRequests[clientId].CommandEvent.Set();
             }
         }
 
-        public void PreviousSlide(string deviceId) {
-            if (string.IsNullOrEmpty(deviceId)) return;
-            var clientId = authentications.FirstOrDefault(pair => pair.Value == deviceId).Key;
-            if (clientId == null) return;
-
+        public void PreviousSlide(string clientId) {
+            if (string.IsNullOrEmpty(clientId)) return;
             if (commandRequests.ContainsKey(clientId)) {
                 commandRequests[clientId].CommandType = CommandType.PreviousSlide;
                 commandRequests[clientId].CommandEvent.Set();
@@ -102,8 +95,8 @@ namespace PresIt.Service {
         }
 
         public IEnumerable<PresentationPreview> GetPresentationPreviews(string clientId) {
-            if (string.IsNullOrEmpty(clientId) || !authentications.ContainsKey(clientId)) return null;
-            return presentations.Values.Where(p => p.Owner == authentications[clientId]).Select(presentation => new PresentationPreview {
+            if (string.IsNullOrEmpty(clientId)) return null;
+            return presentations.Values.Where(p => p.Owner == clientId).Select(presentation => new PresentationPreview {
                 Id = presentation.Id,
                 Name = presentation.Name,
                 FirstSlide = presentation.Slides != null ? presentation.Slides.FirstOrDefault() : null
@@ -111,9 +104,9 @@ namespace PresIt.Service {
         }
 
         public bool UpdateSlides(string clientId, Presentation presentation) {
-            if (string.IsNullOrEmpty(clientId) || !authentications.ContainsKey(clientId)) return false;
+            if (string.IsNullOrEmpty(clientId)) return false;
             if (presentation == null || string.IsNullOrEmpty(presentation.Id) || !presentations.ContainsKey(presentation.Id)) return false;
-            if (presentations[presentation.Id].Owner != authentications[clientId]) return false;
+            if (presentations[presentation.Id].Owner != clientId) return false;
             presentations[presentation.Id].Slides = presentation.Slides;
             return true;
         }

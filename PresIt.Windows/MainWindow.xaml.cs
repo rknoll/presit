@@ -192,6 +192,8 @@ namespace PresIt.Windows {
         }
 
         private void ImportSlides(int slideIndex = -1) {
+            var fileName = droppedFileName;
+            droppedFileName = null;
             if (currentPresentation == null) return;
 
             var importedSlides = new List<Slide>();
@@ -204,20 +206,20 @@ namespace PresIt.Windows {
                 }
             }
 
-            if (droppedFileName != null) {
+            if (fileName != null) {
                 ISlidesImporter importer = null;
-                if (droppedFileName.ToLower().EndsWith(".ppt") ||
-                    droppedFileName.ToLower().EndsWith(".pptx")) {
+                if (fileName.ToLower().EndsWith(".ppt") ||
+                    fileName.ToLower().EndsWith(".pptx")) {
                     importer = new PowerPointImporter();
-                } else if (droppedFileName.ToLower().EndsWith(".jpg") ||
-                            droppedFileName.ToLower().EndsWith(".jpeg") ||
-                            droppedFileName.ToLower().EndsWith(".png") ||
-                            droppedFileName.ToLower().EndsWith(".bmp")) {
+                } else if (fileName.ToLower().EndsWith(".jpg") ||
+                            fileName.ToLower().EndsWith(".jpeg") ||
+                            fileName.ToLower().EndsWith(".png") ||
+                            fileName.ToLower().EndsWith(".bmp")) {
                     importer = new ImageImporter();
                 }
 
                 if (importer != null) {
-                    foreach (var slideData in importer.Convert(droppedFileName)) {
+                    foreach (var slideData in importer.Convert(fileName)) {
                         importedSlides.Insert(slideIndex != -1 ? (slideIndex-1) : slideNumber-1, new Slide {
                             ImageData = slideData,
                             SlideNumber = slideIndex != -1 ? slideIndex++ : slideNumber++

@@ -1,5 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="Hello">Hello World, Click Me!</string>
-    <string name="ApplicationName">PresIt.Android</string>
+  <string name="AuthenticateButtonText">Authenticate Login</string>
+  <string name="NextSlideButtonText">Next Slide</string>
+  <string name="PreviousSlideButtonText">Previous Slide</string>
+  <string name="ApplicationName">PresIt.Android</string>
 </resources>

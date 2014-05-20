@@ -64,13 +64,13 @@ namespace PresIt.Android
 		{
 			
 			// aapt resource value: 0x7f050000
-			public const int MyButton = 2131034112;
+			public const int AuthenticateButton = 2131034112;
 			
 			// aapt resource value: 0x7f050001
-			public const int button1 = 2131034113;
+			public const int NextSlideButton = 2131034113;
 			
 			// aapt resource value: 0x7f050002
-			public const int button2 = 2131034114;
+			public const int PreviousSlideButton = 2131034114;
 			
 			// aapt resource value: 0x7f050003
 			public const int contentFrame = 2131034115;
@@ -110,11 +110,17 @@ namespace PresIt.Android
 		public partial class String
 		{
 			
-			// aapt resource value: 0x7f040001
-			public const int ApplicationName = 2130968577;
+			// aapt resource value: 0x7f040003
+			public const int ApplicationName = 2130968579;
 			
 			// aapt resource value: 0x7f040000
-			public const int Hello = 2130968576;
+			public const int AuthenticateButtonText = 2130968576;
+			
+			// aapt resource value: 0x7f040001
+			public const int NextSlideButtonText = 2130968577;
+			
+			// aapt resource value: 0x7f040002
+			public const int PreviousSlideButtonText = 2130968578;
 			
 			static String()
 			{
