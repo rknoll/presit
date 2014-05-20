@@ -165,6 +165,14 @@ namespace PresIt.Windows {
             commandThread.Abort();
         }
 
+        public void ChangePresentation(string presentationId) {
+            if (EditPresentation != null) {
+                currentPresentation = service.GetPresentation(clientId, presentationId);
+                CommandManager.InvalidateRequerySuggested();
+                EditPresentation(this, currentPresentation);
+            }
+        }
+
         public event PropertyChangedEventHandler PropertyChanged;
 
         private void InitializePresItServiceClient() {

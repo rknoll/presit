@@ -4,6 +4,7 @@
         xmlns:windows="clr-namespace:PresIt.Windows"
         Title="PresIt" Height="250" Width="450" UseLayoutRounding="True" SourceInitialized="OnMainWindowSourceInitialized">
     <Window.Resources>
+        
         <Style x:Key="FlatButtonStyle" BasedOn="{StaticResource {x:Static ToolBar.ButtonStyleKey}}" TargetType="Button">
             <Setter Property="HorizontalAlignment" Value="Stretch" />
             <Setter Property="VerticalAlignment" Value="Stretch" />
@@ -76,7 +77,7 @@
 
                 <ListBox.Template>
                     <ControlTemplate TargetType="ItemsControl">
-                        <ScrollViewer HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Disabled">
+                        <ScrollViewer CanContentScroll="False" HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Disabled">
                             <ItemsPresenter/>
                         </ScrollViewer>
                     </ControlTemplate>
@@ -97,8 +98,9 @@
         <DockPanel x:Name="SelectPresentationView" Background="White" ZIndex="1" Visibility="Hidden">
             <DockPanel DockPanel.Dock="Bottom" LastChildFill="False">
                 <Button DockPanel.Dock="Left" Padding="10 1 10 1" Click="OnCancelShowPresentationClick">Cancel</Button>
+                <Button IsEnabled="False" x:Name="EditPresentationButton" DockPanel.Dock="Right" Padding="10 1 10 1" Click="OnEditPresentationClick">Edit</Button>
             </DockPanel>
-            <ListBox x:Name="SelectPresentationList" MouseDoubleClick="OnSelectPresentationListDoubleClick">
+            <ListBox x:Name="SelectPresentationList" SelectionChanged="OnSelectPresentationListSelectionChanged">
                 <ListBox.ItemsPanel>
                     <ItemsPanelTemplate>
                         <StackPanel Orientation="Horizontal"/>
@@ -107,7 +109,7 @@
 
                 <ListBox.Template>
                     <ControlTemplate TargetType="ItemsControl">
-                        <ScrollViewer HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Disabled">
+                        <ScrollViewer CanContentScroll="False" HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Disabled">
                             <ItemsPresenter/>
                         </ScrollViewer>
                     </ControlTemplate>
@@ -117,7 +119,7 @@
                     <DataTemplate DataType="windows:SlidePreview">
                         <DockPanel Margin="2">
                             <Label DockPanel.Dock="Bottom" HorizontalContentAlignment="Center" Content="{Binding Path=SlideText}" />
-                            <Image Source="{Binding Path=SlideImage}" Stretch="Uniform" StretchDirection="Both" />
+                            <Image MouseDown="OnSelectPresentationListDoubleClick" Source="{Binding Path=SlideImage}" Stretch="Uniform" StretchDirection="Both" />
                         </DockPanel>
                     </DataTemplate>
                 </ListBox.ItemTemplate>

@@ -4,7 +4,8 @@
         Title="PresentationWindow" Height="300" Width="300"
         WindowStyle="None" ResizeMode="NoResize" Background="Black"
         WindowStartupLocation="CenterScreen" WindowState="Maximized" SourceInitialized="OnPresentationWindowSourceInitialized"
-        KeyUp="OnPresentationWindowKeyUp">
+        KeyUp="OnPresentationWindowKeyUp"
+        Cursor="None">
     <Canvas>
         <Image x:Name="SlideImageView" Stretch="Uniform" StretchDirection="Both"
                   Height="{Binding RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type Canvas}}, Path=ActualHeight}"

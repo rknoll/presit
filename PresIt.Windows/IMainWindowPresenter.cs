@@ -16,5 +16,6 @@ namespace PresIt.Windows {
 
         void StartPresentation(string presentationId);
         void StopPresentation();
+        void ChangePresentation(string presentationId);
     }
 }

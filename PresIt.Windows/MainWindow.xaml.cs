@@ -189,6 +189,9 @@ namespace PresIt.Windows {
             if (NewPresentationGrid.Visibility == Visibility.Visible) {
                 HideNewPresentationScreen();
             }
+            if (SelectPresentationView.Visibility == Visibility.Visible) {
+                HideSelectPresentation();
+            }
         }
 
         private void ImportSlides(int slideIndex = -1) {
@@ -273,6 +276,7 @@ namespace PresIt.Windows {
         }
 
         private void OnSelectPresentationListDoubleClick(object sender, MouseButtonEventArgs e) {
+            if (e.LeftButton != MouseButtonState.Pressed || e.ClickCount != 2) return;
             var slidePreview = SelectPresentationList.SelectedItem as SlidePreview;
             if (slidePreview == null || slidePreview.PresentationId == null) return;
             dataContext.StartPresentation(slidePreview.PresentationId);
@@ -307,6 +311,17 @@ namespace PresIt.Windows {
             if (!int.TryParse(preview.SlideText, out slideIndex)) slideIndex = -1;
 
             ImportSlides(slideIndex);
+        }
+
+        private void OnSelectPresentationListSelectionChanged(object sender, SelectionChangedEventArgs e) {
+            var slidePreview = SelectPresentationList.SelectedItem as SlidePreview;
+            EditPresentationButton.IsEnabled = slidePreview != null && slidePreview.PresentationId != null;
+        }
+
+        private void OnEditPresentationClick(object sender, RoutedEventArgs e) {
+            var slidePreview = SelectPresentationList.SelectedItem as SlidePreview;
+            if (slidePreview == null || slidePreview.PresentationId == null) return;
+            dataContext.ChangePresentation(slidePreview.PresentationId);
         }
     }
 }
