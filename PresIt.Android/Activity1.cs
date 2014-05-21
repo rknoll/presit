@@ -11,17 +11,21 @@ using Android.OS;
 using Android.Preferences;
 using Android.Views;
 using Android.Widget;
+using PresIt.Android.GestureRecognition;
+using PresIt.Android.GestureRecognition.Classifier;
 using PresIt.Data;
 using ZXing.Mobile;
 
 namespace PresIt.Android {
     [Activity(Label = "PresIt.Android", MainLauncher = true, Icon = "@drawable/icon")]
-    public class Activity1 : Activity {
+    public class Activity1 : Activity, IGestureRecognitionListener {
         private const string ServerAddress = "presit.noip.me";
-        private static readonly EndpointAddress serverEndpoint = new EndpointAddress("http://" + ServerAddress + ":9001/PresItService/");
+        private static readonly EndpointAddress serverEndpoint = new EndpointAddress("http://" + ServerAddress + "/PresItService/");
 
         private string clientId;
         private IPresItService service;
+        private GestureRecognitionService recognitionService;
+        private Vibrator vibrator;
 
         private string GetClientId() {
             var prefs = PreferenceManager.GetDefaultSharedPreferences(this);
@@ -34,10 +38,15 @@ namespace PresIt.Android {
             return id;
         }
 
+
         protected override void OnCreate(Bundle bundle) {
             base.OnCreate(bundle);
             clientId = GetClientId();
 
+            recognitionService = new GestureRecognitionService(this);
+            recognitionService.RegisterListener(this);
+            recognitionService.StartClassificationMode();
+            vibrator = (Vibrator) GetSystemService(VibratorService);
             SetContentView(Resource.Layout.Main);
 
             InitializePresItServiceClient();
@@ -55,6 +64,20 @@ namespace PresIt.Android {
             var previousSlideButton = FindViewById<Button>(Resource.Id.PreviousSlideButton);
             previousSlideButton.Click += (sender, e) => PreviousSlide();
 
+            var trainingButton = FindViewById<Button>(Resource.Id.TrainingButton);
+            trainingButton.Click += (sender, e) => {
+                if (trainingButton.Text == "Start Training Left") {
+                    trainingButton.Text = "Start Training Right";
+                    recognitionService.StartLearnMode("left");
+                } else if (trainingButton.Text == "Start Training Right") {
+                    trainingButton.Text = "Stop Training";
+                    recognitionService.StopLearnMode();
+                    recognitionService.StartLearnMode("right");
+                } else {
+                    trainingButton.Text = "Start Training Left";
+                    recognitionService.StopLearnMode();
+                }
+            };
             /*
             IEnumerable<PresentationPreview> presentationPreviews = service.GetPresentationPreviews(clientId);
             PresentationPreview firstPresentation = presentationPreviews == null
@@ -113,6 +136,23 @@ namespace PresIt.Android {
         public override bool OnKeyDown(Keycode keyCode, KeyEvent e) {
             if (keyCode == Keycode.VolumeDown || keyCode == Keycode.VolumeUp) return true;
             return base.OnKeyDown(keyCode, e);
+        }
+
+        public void OnGestureRecognized(Distribution distribution) {
+            if (distribution.BestDistance > 8) return;
+            if (distribution.BestMatch == "left") {
+                PreviousSlide();
+            } else if (distribution.BestMatch == "right") {
+                NextSlide();
+            }
+        }
+
+        public void OnGestureLearned(string gestureName) {
+            RunOnUiThread(() => vibrator.Vibrate(100));
+        }
+
+        public void OnTrainingSetDeleted() {
+            
         }
     }
 }

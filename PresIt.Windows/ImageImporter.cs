@@ -6,7 +6,7 @@ using System.IO;
 
 namespace PresIt.Windows {
     public class ImageImporter : ISlidesImporter {
-        public IEnumerable<byte[]> Convert(string filename) {
+        public IEnumerable<SlidesImporterStatus> Convert(string filename) {
             var image = Image.FromFile(filename);
             
             var bitmap = new Bitmap(1024, 768);
@@ -32,7 +32,11 @@ namespace PresIt.Windows {
                 bitmap.Save(memory, ImageFormat.Png);
                 memory.Position = 0;
                 using (var br = new BinaryReader(memory)) {
-                    yield return br.ReadBytes((Int32)memory.Length);
+                    yield return new SlidesImporterStatus {
+                        CurrentSlideData = br.ReadBytes((Int32) memory.Length),
+                        CurrentSlideIndex = 1,
+                        TotalSlides = 1
+                    };
                 }
             }
         }

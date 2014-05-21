@@ -16,7 +16,7 @@
     </Window.Resources>
     <Grid>
         <Canvas ZIndex="2">
-            <Rectangle x:Name="OverlayRectangle" Visibility="Hidden"
+            <Rectangle x:Name="OverlayRectangle" Visibility="Visible"
                        Height="{Binding RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type Canvas}}, Path=ActualHeight}"
                        Width="{Binding RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type Canvas}}, Path=ActualWidth}"
                        Fill="Black" Opacity="0.6" />
@@ -47,6 +47,22 @@
                     </GroupBox>
                 </WrapPanel>
             </Grid>
+
+            <Grid x:Name="ImportSlidesGrid" Visibility="Hidden"
+                  Height="{Binding RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type Canvas}}, Path=ActualHeight}"
+                  Width="{Binding RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type Canvas}}, Path=ActualWidth}">
+                <WrapPanel x:Name="ImportSlidesContent" HorizontalAlignment="Center" VerticalAlignment="Center">
+                    <GroupBox Background="#666666" Foreground="White" VerticalAlignment="Center">
+                        <GroupBox.Header>
+                            <TextBlock Padding="0 0 0 5" Text="Importing Slides" Foreground="White" />
+                        </GroupBox.Header>
+                        <StackPanel>
+                            <ProgressBar x:Name="ImportSlidesProgressBar" Margin="10" Width="150" Height="20" />
+                        </StackPanel>
+                    </GroupBox>
+                </WrapPanel>
+            </Grid>
+
             <Grid x:Name="LoginGrid" Visibility="Hidden"
                   Height="{Binding RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type Canvas}}, Path=ActualHeight}"
                   Width="{Binding RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type Canvas}}, Path=ActualWidth}">

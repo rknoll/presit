@@ -16,7 +16,7 @@ using ZXing.QrCode;
 namespace PresIt.Windows {
     public class MainWindowPresenter : INotifyPropertyChanged, IMainWindowPresenter {
         public static readonly EndpointAddress EndPoint =
-            new EndpointAddress("http://presit.noip.me:9001/PresItService/"); // presit.noip.me
+            new EndpointAddress("http://presit.noip.me/PresItService/"); // presit.noip.me
 
         private readonly BitmapImage barcodeImage;
         private string clientId;

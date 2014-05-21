@@ -75,6 +75,20 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Activity1.cs" />
+    <Compile Include="GestureRecognition\Classifier\Distribution.cs" />
+    <Compile Include="GestureRecognition\Classifier\DTWAlgorithm.cs" />
+    <Compile Include="GestureRecognition\Classifier\FeatureExtraction\GridExtractor.cs" />
+    <Compile Include="GestureRecognition\Classifier\FeatureExtraction\IFeatureExtractor.cs" />
+    <Compile Include="GestureRecognition\Classifier\FeatureExtraction\IFeatureExtractorConstCount.cs" />
+    <Compile Include="GestureRecognition\Classifier\FeatureExtraction\NormedGridExtractor.cs" />
+    <Compile Include="GestureRecognition\Classifier\FeatureExtraction\NormExtractor.cs" />
+    <Compile Include="GestureRecognition\Classifier\FeatureExtraction\SimpleExtractor.cs" />
+    <Compile Include="GestureRecognition\Classifier\GestureClassifier.cs" />
+    <Compile Include="GestureRecognition\Gesture.cs" />
+    <Compile Include="GestureRecognition\GestureRecognitionService.cs" />
+    <Compile Include="GestureRecognition\IGestureRecognitionListener.cs" />
+    <Compile Include="GestureRecognition\Recorder\GestureRecorder.cs" />
+    <Compile Include="GestureRecognition\Recorder\IGestureRecorderListener.cs" />
     <Compile Include="Resources\Resource.Designer.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
@@ -115,6 +129,7 @@
       <Visible>False</Visible>
     </XamarinComponentReference>
   </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildExtensionsPath)\Xamarin\Android\Xamarin.Android.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
      Other similar extension points exist, see Microsoft.Common.targets.

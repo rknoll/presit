@@ -85,13 +85,14 @@ namespace PresIt.Windows {
             storyboard.Begin();
         }
 
-        private void HideNewPresentationScreen() {
-            droppedFileName = null;
+        private void HideNewPresentationScreen(bool fast = false) {
             var be = NewPresentationNameTextBox.GetBindingExpression(TextBox.TextProperty);
             NewPresentationNameTextBox.Text = "";
             if (be != null) be.UpdateSource();
-            OverlayRectangle.Opacity = 0.6;
-            OverlayRectangle.Visibility = Visibility.Visible;
+            if (!fast) {
+                OverlayRectangle.Opacity = 0.6;
+                OverlayRectangle.Visibility = Visibility.Visible;
+            }
             NewPresentationGrid.SetValue(Canvas.TopProperty, 0.0);
             NewPresentationGrid.Visibility = Visibility.Visible;
 
@@ -113,11 +114,17 @@ namespace PresIt.Windows {
             Storyboard.SetTargetProperty(opacityAnimation, new PropertyPath(OpacityProperty));
             Storyboard.SetTargetProperty(topAnimation, new PropertyPath(Canvas.TopProperty));
 
-            storyboard.Children.Add(opacityAnimation);
+            if (!fast) {
+                storyboard.Children.Add(opacityAnimation);
+            }
+
             storyboard.Children.Add(topAnimation);
             
             storyboard.Completed += (sender1, eventArgs) => {
-                OverlayRectangle.Visibility = Visibility.Collapsed;
+                if (!fast) {
+                    OverlayRectangle.Visibility = Visibility.Collapsed;
+                }
+
                 NewPresentationGrid.Visibility = Visibility.Hidden;
             };
 
@@ -179,6 +186,14 @@ namespace PresIt.Windows {
 
         private void EditPresentation(Presentation pres) {
             currentPresentation = pres;
+            EditPresentationSlides.ItemsSource = null;
+
+            if (NewPresentationGrid.Visibility == Visibility.Visible) {
+                HideNewPresentationScreen(pres != null);
+            }
+            if (SelectPresentationView.Visibility == Visibility.Visible) {
+                HideSelectPresentation();
+            }
 
             if (pres != null) {
                 EditPresentationView.Visibility = Visibility.Visible;
@@ -186,69 +201,76 @@ namespace PresIt.Windows {
                 ImportSlides();
             }
 
-            if (NewPresentationGrid.Visibility == Visibility.Visible) {
-                HideNewPresentationScreen();
-            }
-            if (SelectPresentationView.Visibility == Visibility.Visible) {
-                HideSelectPresentation();
-            }
         }
 
         private void ImportSlides(int slideIndex = -1) {
-            var fileName = droppedFileName;
-            droppedFileName = null;
-            if (currentPresentation == null) return;
+            ImportSlidesProgressBar.Maximum = 1;
+            ImportSlidesProgressBar.Value = 0;
+            OverlayRectangle.Opacity = 0.6;
+            OverlayRectangle.Visibility = Visibility.Visible;
+            ImportSlidesGrid.Visibility = Visibility.Visible;
 
             var importedSlides = new List<Slide>();
-            int slideNumber = 1;
-
-            if (currentPresentation.Slides != null) {
-                foreach (var slide in currentPresentation.Slides) {
-                    slideNumber++;
-                    importedSlides.Add(slide);
-                }
-            }
-
-            if (fileName != null) {
-                ISlidesImporter importer = null;
-                if (fileName.ToLower().EndsWith(".ppt") ||
-                    fileName.ToLower().EndsWith(".pptx")) {
-                    importer = new PowerPointImporter();
-                } else if (fileName.ToLower().EndsWith(".jpg") ||
-                            fileName.ToLower().EndsWith(".jpeg") ||
-                            fileName.ToLower().EndsWith(".png") ||
-                            fileName.ToLower().EndsWith(".bmp")) {
-                    importer = new ImageImporter();
-                }
-
-                if (importer != null) {
-                    foreach (var slideData in importer.Convert(fileName)) {
-                        importedSlides.Insert(slideIndex != -1 ? (slideIndex-1) : slideNumber-1, new Slide {
-                            ImageData = slideData,
-                            SlideNumber = slideIndex != -1 ? slideIndex++ : slideNumber++
-                        });
-                        if (slideIndex != -1) slideNumber++;
-                    }
-                }
-            }
-
-            if (slideIndex != -1) {
-                for (slideIndex--; slideIndex < slideNumber - 1; ++slideIndex) {
-                    importedSlides[slideIndex].SlideNumber = slideIndex + 1;
-                }
-            }
-
-            currentPresentation.Slides = importedSlides;
-
             var slides = new ObservableCollection<SlidePreview>();
 
-            foreach (var slide in importedSlides) {
-                slides.Add(SlidePreview.CreateFromSlide(slide, currentPresentation.Id));
-            }
+            new Thread(() => {
+                var fileName = droppedFileName;
+                droppedFileName = null;
+                if (currentPresentation == null) return;
 
-            slides.Add(SlidePreview.CreateAddNewSlide(currentPresentation.Id));
+                int slideNumber = 1;
 
-            EditPresentationSlides.ItemsSource = slides;
+                if (currentPresentation.Slides != null) {
+                    foreach (var slide in currentPresentation.Slides) {
+                        slideNumber++;
+                        importedSlides.Add(slide);
+                    }
+                }
+
+                if (fileName != null) {
+                    ISlidesImporter importer = null;
+                    if (fileName.ToLower().EndsWith(".ppt") ||
+                        fileName.ToLower().EndsWith(".pptx")) {
+                        importer = new PowerPointImporter();
+                    } else if (fileName.ToLower().EndsWith(".jpg") ||
+                                fileName.ToLower().EndsWith(".jpeg") ||
+                                fileName.ToLower().EndsWith(".png") ||
+                                fileName.ToLower().EndsWith(".bmp")) {
+                        importer = new ImageImporter();
+                    }
+
+                    if (importer != null) {
+                        foreach (var slideData in importer.Convert(fileName)) {
+                            context.Post(state => {
+                                ImportSlidesProgressBar.Maximum = ((SlidesImporterStatus)state).TotalSlides;
+                                ImportSlidesProgressBar.Value = ((SlidesImporterStatus)state).CurrentSlideIndex;
+                            }, slideData);
+                            importedSlides.Insert(slideIndex != -1 ? (slideIndex-1) : slideNumber-1, new Slide {
+                                ImageData = slideData.CurrentSlideData,
+                                SlideNumber = slideIndex != -1 ? slideIndex++ : slideNumber++
+                            });
+                            if (slideIndex != -1) slideNumber++;
+                        }
+                    }
+                }
+
+                if (slideIndex != -1) {
+                    for (slideIndex--; slideIndex < slideNumber - 1; ++slideIndex) {
+                        importedSlides[slideIndex].SlideNumber = slideIndex + 1;
+                    }
+                }
+
+                context.Post(state => {
+                    foreach (var slide in importedSlides) {
+                        slides.Add(SlidePreview.CreateFromSlide(slide, currentPresentation.Id));
+                    }
+                    slides.Add(SlidePreview.CreateAddNewSlide(currentPresentation.Id));
+                    currentPresentation.Slides = importedSlides;
+                    EditPresentationSlides.ItemsSource = slides;
+                    OverlayRectangle.Visibility = Visibility.Hidden;
+                    ImportSlidesGrid.Visibility = Visibility.Hidden;
+                }, null);
+            }).Start();
         }
 
         private void OnCancelNewPresentationClick(object sender, RoutedEventArgs e) {

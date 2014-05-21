@@ -2,6 +2,6 @@
 
 namespace PresIt.Windows {
     public interface ISlidesImporter {
-        IEnumerable<byte[]> Convert(string filename);
+        IEnumerable<SlidesImporterStatus> Convert(string filename);
     }
 }
