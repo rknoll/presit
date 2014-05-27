@@ -3,6 +3,7 @@ using Android.Content;
 using PresIt.Android.GestureRecognition.Classifier;
 using PresIt.Android.GestureRecognition.Classifier.FeatureExtraction;
 using PresIt.Android.GestureRecognition.Recorder;
+using PresIt.Android.GestureRecognition.Sensors;
 
 namespace PresIt.Android.GestureRecognition {
     public class GestureRecognitionService : IGestureRecorderListener {
@@ -15,9 +16,9 @@ namespace PresIt.Android.GestureRecognition {
 
         private readonly HashSet<IGestureRecognitionListener> listeners;
 
-        public GestureRecognitionService(Context context) {
+        public GestureRecognitionService(ISensorSource source) {
             listeners = new HashSet<IGestureRecognitionListener>();
-            recorder = new GestureRecorder(context);
+            recorder = new GestureRecorder(source);
             classifier = new GestureClassifier(new NormedGridExtractor());
             recorder.RegisterListener(this);
         }

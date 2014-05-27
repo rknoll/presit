@@ -89,6 +89,10 @@
     <Compile Include="GestureRecognition\IGestureRecognitionListener.cs" />
     <Compile Include="GestureRecognition\Recorder\GestureRecorder.cs" />
     <Compile Include="GestureRecognition\Recorder\IGestureRecorderListener.cs" />
+    <Compile Include="GestureRecognition\Sensors\BluetoothSensorSource.cs" />
+    <Compile Include="GestureRecognition\Sensors\ISensorListener.cs" />
+    <Compile Include="GestureRecognition\Sensors\ISensorSource.cs" />
+    <Compile Include="GestureRecognition\Sensors\PhoneSensorSource.cs" />
     <Compile Include="Resources\Resource.Designer.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>

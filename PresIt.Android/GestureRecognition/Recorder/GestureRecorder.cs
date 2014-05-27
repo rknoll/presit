@@ -2,9 +2,11 @@ using System;
 using System.Collections.Generic;
 using Android.Content;
 using Android.Hardware;
+using PresIt.Android.GestureRecognition.Sensors;
+using ISensorListener = PresIt.Android.GestureRecognition.Sensors.ISensorListener;
 
 namespace PresIt.Android.GestureRecognition.Recorder {
-    public class GestureRecorder : Java.Lang.Object, ISensorEventListener {
+    public class GestureRecorder :ISensorListener {
 
         public enum RecordMode {
             MotionDetected,
@@ -13,28 +15,24 @@ namespace PresIt.Android.GestureRecognition.Recorder {
 
         private const int MinGestureSize = 8;
         public double Threshold { get; set; }
-        private SensorManager sensorManager;
         private bool isRecording;
         private int stepsSinceNoMovement;
         private List<double[]> gestureValues;
-        private readonly Context context;
         private IGestureRecorderListener listener;
+        private readonly ISensorSource source;
         public bool IsRunning { get; private set; }
         public RecordMode CurrentRecordMode { get; set; }
 
-        public void OnAccuracyChanged(Sensor sensor, SensorStatus accuracy) {
-        }
-
-        public GestureRecorder(Context context) {
-            this.context = context;
+        public GestureRecorder(ISensorSource source) {
+            this.source = source;
             CurrentRecordMode = RecordMode.MotionDetected;
             Threshold = 2;
         }
 
-        private double CalcVectorNorm(SensorEvent sensorEvent) {
+        private double CalcVectorNorm(double[] values) {
             return
-                Math.Sqrt(sensorEvent.Values[0]*sensorEvent.Values[0] + sensorEvent.Values[1]*sensorEvent.Values[1] +
-                          sensorEvent.Values[2]*sensorEvent.Values[2]) - 9.9;
+                Math.Sqrt(values[0]*values[0] + values[1]*values[1] +
+                          values[2]*values[2]) - 9.9;
         }
 
         public void OnPushToGesture(bool pushed) {
@@ -51,26 +49,49 @@ namespace PresIt.Android.GestureRecognition.Recorder {
             }
         }
 
-        public void OnSensorChanged(SensorEvent e) {
-            var value = new double[] {
-                e.Values[0],
-                e.Values[1],
-                e.Values[2]
-            };
+        public void RegisterListener(IGestureRecorderListener listener) {
+            this.listener = listener;
+            Start();
+        }
+
+        public void UnregisterListener(IGestureRecorderListener listener) {
+            this.listener = null;
+            Stop();
+        }
+
+        public void Start() {
+            source.SetSensorListener(this);
+            IsRunning = true;
+        }
+
+        public void Stop() {
+            source.SetSensorListener(null);
+            IsRunning = false;
+        }
+
+        public void Pause(bool b) {
+            if (b) {
+                Stop();
+            } else {
+                Start();
+            }
+        }
+
+        public void OnDataReceived(double[] values) {
             switch (CurrentRecordMode) {
                 case RecordMode.MotionDetected:
                     if (isRecording) {
-                        gestureValues.Add(value);
-                        if (CalcVectorNorm(e) < Threshold) {
+                        gestureValues.Add(values);
+                        if (CalcVectorNorm(values) < Threshold) {
                             stepsSinceNoMovement ++;
                         } else {
                             stepsSinceNoMovement = 0;
                         }
-                    } else if(CalcVectorNorm(e) >= Threshold) {
+                    } else if(CalcVectorNorm(values) >= Threshold) {
                         isRecording = true;
                         stepsSinceNoMovement = 0;
                         gestureValues = new List<double[]>();
-                        gestureValues.Add(value);
+                        gestureValues.Add(values);
                     }
                     if (stepsSinceNoMovement == 10) {
                         if (gestureValues.Count - 10 > MinGestureSize) {
@@ -83,40 +104,9 @@ namespace PresIt.Android.GestureRecognition.Recorder {
                     break;
                 case RecordMode.PushToGesture:
                     if (isRecording) {
-                        gestureValues.Add(value);
+                        gestureValues.Add(values);
                     }
                     break;
-            }
-        }
-
-        public void RegisterListener(IGestureRecorderListener listener) {
-            this.listener = listener;
-            Start();
-        }
-
-        public void UnregisterListener(IGestureRecorderListener listener) {
-            this.listener = null;
-            Stop();
-        }
-
-        public void Start() {
-            sensorManager = (SensorManager)context.GetSystemService(Context.SensorService);
-            sensorManager.RegisterListener(this, sensorManager.GetDefaultSensor(SensorType.Accelerometer),
-                SensorDelay.Game);
-            IsRunning = true;
-        }
-
-        public void Stop() {
-            sensorManager.UnregisterListener(this);
-            IsRunning = false;
-        }
-
-        public void Pause(bool b) {
-            if (b) {
-                sensorManager.UnregisterListener(this);
-            } else {
-                sensorManager.RegisterListener(this, sensorManager.GetDefaultSensor(SensorType.Accelerometer),
-                SensorDelay.Game);
             }
         }
     }

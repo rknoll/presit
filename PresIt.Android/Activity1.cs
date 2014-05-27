@@ -1,18 +1,17 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Linq;
 using System.ServiceModel;
 using System.ServiceModel.Channels;
 using System.Threading;
 using Android.App;
-using Android.Content;
-using Android.Graphics;
+using Android.Bluetooth;
 using Android.OS;
 using Android.Preferences;
 using Android.Views;
 using Android.Widget;
 using PresIt.Android.GestureRecognition;
 using PresIt.Android.GestureRecognition.Classifier;
+using PresIt.Android.GestureRecognition.Sensors;
 using PresIt.Data;
 using ZXing.Mobile;
 
@@ -43,7 +42,12 @@ namespace PresIt.Android {
             base.OnCreate(bundle);
             clientId = GetClientId();
 
-            recognitionService = new GestureRecognitionService(this);
+
+            var sensorSource = new PhoneSensorSource(this);
+            //var sensorSource = new BluetoothSensorSource(this);
+
+
+            recognitionService = new GestureRecognitionService(sensorSource);
             recognitionService.RegisterListener(this);
             recognitionService.StartClassificationMode();
             vibrator = (Vibrator) GetSystemService(VibratorService);
