@@ -203,6 +203,10 @@ namespace PresIt.Windows {
                 case Key.Left:
                     PreviousSlide();
                     break;
+                case Key.B:
+                case Key.OemPeriod:
+                    SwitchPause();
+                    break;
             }
         }
     }
