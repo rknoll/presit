@@ -48,7 +48,7 @@ namespace PresIt.Android
 		{
 			
 			// aapt resource value: 0x7f020000
-			public const int Icon = 2130837504;
+			public const int icon = 2130837504;
 			
 			static Drawable()
 			{
@@ -66,17 +66,32 @@ namespace PresIt.Android
 			// aapt resource value: 0x7f050000
 			public const int AuthenticateButton = 2131034112;
 			
+			// aapt resource value: 0x7f050007
+			public const int ExternalSensorTextView = 2131034119;
+			
+			// aapt resource value: 0x7f050008
+			public const int ExternalTrainingButton = 2131034120;
+			
 			// aapt resource value: 0x7f050001
-			public const int NextSlideButton = 2131034113;
+			public const int ManualControlTextView = 2131034113;
 			
 			// aapt resource value: 0x7f050002
-			public const int PreviousSlideButton = 2131034114;
-			
-			// aapt resource value: 0x7f050003
-			public const int TrainingButton = 2131034115;
+			public const int NextSlideButton = 2131034114;
 			
 			// aapt resource value: 0x7f050004
-			public const int contentFrame = 2131034116;
+			public const int PauseButton = 2131034116;
+			
+			// aapt resource value: 0x7f050005
+			public const int PhoneSensorTextView = 2131034117;
+			
+			// aapt resource value: 0x7f050003
+			public const int PreviousSlideButton = 2131034115;
+			
+			// aapt resource value: 0x7f050006
+			public const int TrainingButton = 2131034118;
+			
+			// aapt resource value: 0x7f050009
+			public const int contentFrame = 2131034121;
 			
 			static Id()
 			{
@@ -113,17 +128,32 @@ namespace PresIt.Android
 		public partial class String
 		{
 			
-			// aapt resource value: 0x7f040003
-			public const int ApplicationName = 2130968579;
+			// aapt resource value: 0x7f040004
+			public const int ApplicationName = 2130968580;
 			
 			// aapt resource value: 0x7f040000
 			public const int AuthenticateButtonText = 2130968576;
 			
+			// aapt resource value: 0x7f040006
+			public const int ExternalSensorTextViewText = 2130968582;
+			
+			// aapt resource value: 0x7f040007
+			public const int ManualControlTextViewText = 2130968583;
+			
 			// aapt resource value: 0x7f040001
 			public const int NextSlideButtonText = 2130968577;
 			
+			// aapt resource value: 0x7f040003
+			public const int PauseButtonText = 2130968579;
+			
+			// aapt resource value: 0x7f040005
+			public const int PhoneSensorTextViewText = 2130968581;
+			
 			// aapt resource value: 0x7f040002
 			public const int PreviousSlideButtonText = 2130968578;
+			
+			// aapt resource value: 0x7f040008
+			public const int TrainingButtonText = 2130968584;
 			
 			static String()
 			{

@@ -56,11 +56,13 @@ namespace PresIt.Android.GestureRecognition.Recorder {
         }
 
         public void Start() {
+            if (IsRunning) return;
             source.SetSensorListener(this);
             IsRunning = true;
         }
 
         public void Stop() {
+            if (!IsRunning) return;
             source.SetSensorListener(null);
             IsRunning = false;
         }

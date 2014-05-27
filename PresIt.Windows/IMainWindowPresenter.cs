@@ -50,6 +50,11 @@ namespace PresIt.Windows {
         event EventHandler PreviousSlide;
 
         /// <summary>
+        /// Event if we should switch to the Next Slide
+        /// </summary>
+        event EventHandler SwitchPause;
+
+        /// <summary>
         /// Event after we got the Number of Slides, to set the max value of the progress bar
         /// </summary>
         event EventHandler<int> GotPresentationSlidesCount;

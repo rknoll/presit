@@ -27,11 +27,11 @@ namespace PresIt.Android {
         // the remote service
         private IPresItService service;
 
-        // a service to recognize gestures
-        private GestureRecognitionService recognitionService;
-
         // vibrating feedback for gesture recognition
         private Vibrator vibrator;
+
+        private GestureRecognitionService internalRecognitionService;
+        private GestureRecognitionService externalRecognitionService;
 
         // get stored client ID or create a new one and save it
         private string GetClientId() {
@@ -50,16 +50,17 @@ namespace PresIt.Android {
             base.OnCreate(bundle);
             clientId = GetClientId();
 
-            // create new sensor data source
-            var sensorSource = new PhoneSensorSource(this);
-            //var sensorSource = new BluetoothSensorSource(this);
-
             // gesture recognition
-            recognitionService = new GestureRecognitionService(sensorSource);
-            recognitionService.RegisterListener(this);
+            internalRecognitionService = new GestureRecognitionService(new PhoneSensorSource(this));
+            externalRecognitionService = new GestureRecognitionService(new BluetoothSensorSource(this));
+
+            // register callbacks
+            internalRecognitionService.RegisterListener(this);
+            externalRecognitionService.RegisterListener(this);
 
             // start detecting gestures
-            recognitionService.StartClassificationMode();
+            internalRecognitionService.StartClassificationMode();
+            externalRecognitionService.StartClassificationMode();
 
             // keep light on and screen unlocked
             Window.AddFlags(WindowManagerFlags.KeepScreenOn);
@@ -89,28 +90,55 @@ namespace PresIt.Android {
 
             var trainingButton = FindViewById<Button>(Resource.Id.TrainingButton);
             trainingButton.Click += (sender, e) => {
-                if (trainingButton.Text == "Start Training Left") {
-                    trainingButton.Text = "Start Training Right";
-                    recognitionService.StartLearnMode("left");
-                } else if (trainingButton.Text == "Start Training Right") {
-                    trainingButton.Text = "Stop Training";
-                    recognitionService.StopLearnMode();
-                    recognitionService.StartLearnMode("right");
-                } else {
-                    trainingButton.Text = "Start Training Left";
-                    recognitionService.StopLearnMode();
-                }
+                var text = trainingButton.Text;
+                SetTraining(internalRecognitionService, ref text);
+                trainingButton.Text = text;
             };
+
+            var externalTrainingButton = FindViewById<Button>(Resource.Id.ExternalTrainingButton);
+            externalTrainingButton.Click += (sender, e) => {
+                var text = externalTrainingButton.Text;
+                SetTraining(externalRecognitionService, ref text);
+                externalTrainingButton.Text = text;
+            };
+        }
+
+        private void SetTraining(GestureRecognitionService s, ref string buttonText) {
+            switch (buttonText) {
+                case "Start Training Left":
+                    buttonText = "Start Training Right";
+                    s.StartLearnMode("left");
+                    break;
+                case "Start Training Right":
+                    buttonText = "Start Training Pause";
+                    s.StopLearnMode();
+                    s.StartLearnMode("right");
+                    break;
+                case "Start Training Pause":
+                    buttonText = "Stop Training";
+                    s.StopLearnMode();
+                    s.StartLearnMode("pause");
+                    break;
+                default:
+                    buttonText = "Start Training Left";
+                    s.StopLearnMode();
+                    break;
+            }
         }
 
         // switch to next slide
         private void NextSlide() {
-            new Thread(() => service.NextSlide(clientId)).Start();
+            new Thread(() => service.SendCommand(clientId, CommandType.NextSlide)).Start();
         }
 
         // switch to previous slide
         private void PreviousSlide() {
-            new Thread(() => service.PreviousSlide(clientId)).Start();
+            new Thread(() => service.SendCommand(clientId, CommandType.PreviousSlide)).Start();
+        }
+        
+        // pause / unpause presentation
+        private void SwitchPause() {
+            new Thread(() => service.SendCommand(clientId, CommandType.Pause)).Start();
         }
 
         // server connection initialization
@@ -152,20 +180,33 @@ namespace PresIt.Android {
         }
 
         // gesture recognition callbacks
-        public void OnGestureRecognized(Distribution distribution) {
-            if (distribution.BestDistance > 8) return;
+        public void OnGestureRecognized(GestureRecognitionService source, Distribution distribution) {
+            if (source == internalRecognitionService) {
+                if (distribution.BestDistance > 8) return;
+                RunOnUiThread(() => vibrator.Vibrate(100));
+            } else if (source == externalRecognitionService) {
+                if (distribution.BestDistance > 8) return;
+                RunOnUiThread(() => Toast.MakeText(this, "Gesture " + distribution.BestMatch + " recognized", ToastLength.Short).Show());
+            }
+
             if (distribution.BestMatch == "left") {
                 PreviousSlide();
             } else if (distribution.BestMatch == "right") {
                 NextSlide();
+            } else if (distribution.BestMatch == "pause") {
+                SwitchPause();
             }
         }
 
-        public void OnGestureLearned(string gestureName) {
-            RunOnUiThread(() => vibrator.Vibrate(100));
+        public void OnGestureLearned(GestureRecognitionService source, string gestureName) {
+            if (source == internalRecognitionService) {
+                RunOnUiThread(() => vibrator.Vibrate(100));
+            } else if (source == externalRecognitionService) {
+                RunOnUiThread(() => Toast.MakeText(this, "Gesture " + gestureName + " learned", ToastLength.Short).Show());
+            }
         }
 
-        public void OnTrainingSetDeleted() {
+        public void OnTrainingSetDeleted(GestureRecognitionService source) {
         }
     }
 }

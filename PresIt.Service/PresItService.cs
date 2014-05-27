@@ -132,20 +132,11 @@ namespace PresIt.Service {
             return command;
         }
 
-        public void NextSlide(string clientId) {
+        public void SendCommand(string clientId, CommandType command) {
             if (string.IsNullOrEmpty(clientId)) return;
             if (commandRequests.ContainsKey(clientId)) {
-                // send new message (next slide)
-                commandRequests[clientId].CommandType = CommandType.NextSlide;
-                commandRequests[clientId].CommandEvent.Set();
-            }
-        }
-
-        public void PreviousSlide(string clientId) {
-            if (string.IsNullOrEmpty(clientId)) return;
-            if (commandRequests.ContainsKey(clientId)) {
-                // send new message (previous slide)
-                commandRequests[clientId].CommandType = CommandType.PreviousSlide;
+                // send new message
+                commandRequests[clientId].CommandType = command;
                 commandRequests[clientId].CommandEvent.Set();
             }
         }

@@ -20,6 +20,7 @@ namespace PresIt.Windows {
         private List<SlidePreview> slides;
         private int currentSlideIndex;
         private int nextSlideIndex;
+        private bool isPaused;
 
         private readonly SynchronizationContext context;
 
@@ -30,6 +31,7 @@ namespace PresIt.Windows {
             // register callbacks for slide control
             dataContext.NextSlide += (o, args) => context.Post(state => NextSlide(), null);
             dataContext.PreviousSlide += (o, pres) => context.Post(state => PreviousSlide(), null);
+            dataContext.SwitchPause += (o, pres) => context.Post(state => SwitchPause(), null);
         }
 
         private void OnPresentationWindowSourceInitialized(object sender, EventArgs e) {
@@ -70,11 +72,13 @@ namespace PresIt.Windows {
                 SlideImageView.Source = slides[currentSlideIndex].SlideImage;
                 nextSlideIndex = -1;
             }
-            if (currentSlideIndex >= slides.Count - 1) return;
-
-            nextSlideIndex = currentSlideIndex + 1;
-
-            Animate();
+            if (isPaused) {
+                SwitchPause();
+            } else {
+                if (currentSlideIndex >= slides.Count - 1) return;
+                nextSlideIndex = currentSlideIndex + 1;
+                Animate();
+            }
         }
 
         /// <summary>
@@ -90,11 +94,32 @@ namespace PresIt.Windows {
                 SlideImageView.Source = slides[currentSlideIndex].SlideImage;
                 nextSlideIndex = -1;
             }
-            if (currentSlideIndex <= 0) return;
+            if (isPaused) {
+                SwitchPause();
+            } else {
+                if (currentSlideIndex <= 0) return;
+                nextSlideIndex = currentSlideIndex - 1;
+                Animate();
+            }
+        }
+        
+        /// <summary>
+        /// Pause / Unpause Presentation
+        /// </summary>
+        private void SwitchPause() {
+            if (currentStoryboard != null) {
+                currentStoryboard.Stop(this);
+                currentStoryboard.Remove(this);
+            }
+            if (nextSlideIndex >= 0) {
+                currentSlideIndex = nextSlideIndex;
+                SlideImageView.Source = slides[currentSlideIndex].SlideImage;
+                nextSlideIndex = -1;
+            }
 
-            nextSlideIndex = currentSlideIndex - 1;
+            isPaused = !isPaused;
 
-            Animate();
+            AnimatePause();
         }
 
         private void Animate() {
@@ -132,6 +157,32 @@ namespace PresIt.Windows {
                 NextSlideImageView.Visibility = Visibility.Hidden;
                 currentStoryboard.Remove(this);
                 currentStoryboard = null;
+            };
+
+            // start animation
+            currentStoryboard.Begin(this, true);
+        }
+
+        private void AnimatePause() {
+            currentStoryboard = new Storyboard();
+            NextSlideImageView.Visibility = Visibility.Hidden;
+
+            var opacityAnimation = new DoubleAnimation {
+                From = isPaused ? 1 : 0,
+                To = isPaused ? 0 : 1,
+                Duration = TimeSpan.FromSeconds(0.5)
+            };
+
+            Storyboard.SetTarget(opacityAnimation, SlideImageView);
+            Storyboard.SetTargetProperty(opacityAnimation, new PropertyPath(OpacityProperty));
+
+            currentStoryboard.Children.Add(opacityAnimation);
+
+            currentStoryboard.Completed += (sender1, eventArgs) => {
+                if (currentStoryboard == null) return;
+                currentStoryboard.Remove(this);
+                currentStoryboard = null;
+                SlideImageView.Opacity = isPaused ? 0 : 1;
             };
 
             // start animation

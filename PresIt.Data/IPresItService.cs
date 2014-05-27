@@ -63,16 +63,10 @@ namespace PresIt.Data {
         CommandType GetNextCommand(string clientId);
 
         /// <summary>
-        /// Switch to the next Slide
+        /// Send Command to Client
         /// </summary>
         [OperationContract]
-        void NextSlide(string clientId);
-
-        /// <summary>
-        /// Switch to the previous Slide
-        /// </summary>
-        [OperationContract]
-        void PreviousSlide(string clientId);
+        void SendCommand(string clientId, CommandType command);
 
         /// <summary>
         /// Get the Number of stored Presentations for a User

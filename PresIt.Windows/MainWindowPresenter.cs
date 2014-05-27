@@ -128,6 +128,7 @@ namespace PresIt.Windows {
         public event EventHandler PresentationDeleted;
         public event EventHandler NextSlide;
         public event EventHandler PreviousSlide;
+        public event EventHandler SwitchPause;
         public event EventHandler<int> GotPresentationSlidesCount;
         public event EventHandler GotPresentationSlide;
         public event EventHandler CancelStartPresentation;
@@ -252,6 +253,9 @@ namespace PresIt.Windows {
                             break;
                         case CommandType.PreviousSlide:
                             PreviousSlide(this, null);
+                            break;
+                        case CommandType.Pause:
+                            SwitchPause(this, null);
                             break;
                     }
                 } catch (Exception e) {

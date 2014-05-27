@@ -26,7 +26,7 @@ namespace PresIt.Android.GestureRecognition {
             if (IsLearning) {
                 classifier.TrainData(new Gesture(values, activeLearnLabel));
                 foreach (var listener in listeners) {
-                    listener.OnGestureLearned(activeLearnLabel);
+                    listener.OnGestureLearned(this, activeLearnLabel);
                 }
             } else if (isClassifying) {
                 recorder.Pause(true);
@@ -34,7 +34,7 @@ namespace PresIt.Android.GestureRecognition {
                 recorder.Pause(false);
                 if (distribution != null && distribution.Size > 0) {
                     foreach (var listener in listeners) {
-                        listener.OnGestureRecognized(distribution);
+                        listener.OnGestureRecognized(this, distribution);
                     }
                 }
             }
@@ -43,7 +43,7 @@ namespace PresIt.Android.GestureRecognition {
         public void DeleteTrainingSet() {
 			if (classifier.DeleteTrainingSet()) {
 				foreach (var listener in listeners) {
-					listener.OnTrainingSetDeleted();
+					listener.OnTrainingSetDeleted(this);
 				}
 			}
 		}

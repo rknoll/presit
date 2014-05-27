@@ -3,5 +3,10 @@
   <string name="AuthenticateButtonText">Authenticate Login</string>
   <string name="NextSlideButtonText">Next Slide</string>
   <string name="PreviousSlideButtonText">Previous Slide</string>
+  <string name="PauseButtonText">Switch Pause</string>
   <string name="ApplicationName">PresIt.Android</string>
+  <string name="PhoneSensorTextViewText">Phone Sensor</string>
+  <string name="ExternalSensorTextViewText">External Sensor</string>
+  <string name="ManualControlTextViewText">Manual Control</string>
+  <string name="TrainingButtonText">Start Training Left</string>
 </resources>

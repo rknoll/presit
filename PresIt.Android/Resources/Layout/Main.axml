@@ -8,6 +8,14 @@
         android:layout_width="fill_parent"
         android:layout_height="wrap_content"
         android:text="@string/AuthenticateButtonText" />
+    <TextView
+        android:text="@string/ManualControlTextViewText"
+        android:textAppearance="?android:attr/textAppearanceMedium"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:id="@+id/ManualControlTextView"
+        android:gravity="center"
+        android:layout_marginTop="15px" />
     <Button
         android:text="@string/NextSlideButtonText"
         android:layout_width="match_parent"
@@ -19,8 +27,34 @@
         android:layout_height="wrap_content"
         android:id="@+id/PreviousSlideButton" />
     <Button
-        android:text="Start Training Left"
+        android:text="@string/PauseButtonText"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:id="@+id/PauseButton" />
+    <TextView
+        android:text="@string/PhoneSensorTextViewText"
+        android:textAppearance="?android:attr/textAppearanceMedium"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:id="@+id/PhoneSensorTextView"
+        android:gravity="center"
+        android:layout_marginTop="15px" />
+    <Button
+        android:text="@string/TrainingButtonText"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:id="@+id/TrainingButton" />
+    <TextView
+        android:text="@string/ExternalSensorTextViewText"
+        android:textAppearance="?android:attr/textAppearanceMedium"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:id="@+id/ExternalSensorTextView"
+        android:gravity="center"
+        android:layout_marginTop="15px" />
+    <Button
+        android:text="@string/TrainingButtonText"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:id="@+id/ExternalTrainingButton" />
 </LinearLayout>
