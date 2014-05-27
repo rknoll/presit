@@ -1,4 +1,4 @@
 presit
 ======
 
-collaborative presentation sharing platform
+keep all your presentations with you
