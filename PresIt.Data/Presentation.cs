@@ -3,17 +3,21 @@ using System.ComponentModel;
 using System.Runtime.Serialization;
 
 namespace PresIt.Data {
+
+    /// <summary>
+    /// Represents a Presentation on the Server
+    /// </summary>
     [DataContract]
     public class Presentation : INotifyPropertyChanged {
 
         private string id;
-
         private string owner;
-
         private string name;
-
         private IEnumerable<Slide> slides;
 
+        /// <summary>
+        /// Unique ID
+        /// </summary>
         [DataMember]
         public string Id {
             get { return id; }
@@ -24,6 +28,9 @@ namespace PresIt.Data {
             }
         }
 
+        /// <summary>
+        /// ID of the Presentation Owner
+        /// </summary>
         [DataMember]
         public string Owner {
             get { return owner; }
@@ -34,6 +41,9 @@ namespace PresIt.Data {
             }
         }
 
+        /// <summary>
+        /// Name of the Presentation
+        /// </summary>
         [DataMember]
         public string Name {
             get { return name; }
@@ -43,7 +53,10 @@ namespace PresIt.Data {
                 OnPropertyChanged("Name");
             }
         }
-        
+
+        /// <summary>
+        /// All Slides of this Presentation
+        /// </summary>
         [DataMember]
         public IEnumerable<Slide> Slides {
             get { return slides; }

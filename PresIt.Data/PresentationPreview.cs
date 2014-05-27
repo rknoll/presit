@@ -2,15 +2,20 @@
 using System.Runtime.Serialization;
 
 namespace PresIt.Data {
+
+    /// <summary>
+    /// Represents the Preview of a Presentation
+    /// </summary>
     [DataContract]
     public class PresentationPreview : INotifyPropertyChanged {
 
         private string id;
-
         private string name;
-
         private Slide firstSlide;
 
+        /// <summary>
+        /// ID of the Presentation
+        /// </summary>
         [DataMember]
         public string Id {
             get { return id; }
@@ -21,6 +26,9 @@ namespace PresIt.Data {
             }
         }
 
+        /// <summary>
+        /// Name of the Presentation
+        /// </summary>
         [DataMember]
         public string Name {
             get { return name; }
@@ -30,7 +38,10 @@ namespace PresIt.Data {
                 OnPropertyChanged("Name");
             }
         }
-        
+
+        /// <summary>
+        /// The first Slide of the Presentation
+        /// </summary>
         [DataMember]
         public Slide FirstSlide {
             get { return firstSlide; }
