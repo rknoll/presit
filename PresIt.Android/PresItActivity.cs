@@ -15,15 +15,25 @@ using ZXing.Mobile;
 
 namespace PresIt.Android {
     [Activity(Label = "PresIt", MainLauncher = true, Icon = "@drawable/icon")]
-    public class Activity1 : Activity, IGestureRecognitionListener {
+    public class PresItActivity : Activity, IGestureRecognitionListener {
+
+        // address of WCF Service (for debugging: localhost:9001)
         private const string ServerAddress = "presit.noip.me";
         private static readonly EndpointAddress serverEndpoint = new EndpointAddress("http://" + ServerAddress + "/PresItService/");
 
+        // our unique ID which is stored on the device, the main login key
         private string clientId;
+
+        // the remote service
         private IPresItService service;
+
+        // a service to recognize gestures
         private GestureRecognitionService recognitionService;
+
+        // vibrating feedback for gesture recognition
         private Vibrator vibrator;
 
+        // get stored client ID or create a new one and save it
         private string GetClientId() {
             var prefs = PreferenceManager.GetDefaultSharedPreferences(this);
             var id = prefs.GetString("clientId", null);
@@ -35,24 +45,35 @@ namespace PresIt.Android {
             return id;
         }
 
-
+        // entry point
         protected override void OnCreate(Bundle bundle) {
             base.OnCreate(bundle);
             clientId = GetClientId();
 
-
+            // create new sensor data source
             var sensorSource = new PhoneSensorSource(this);
             //var sensorSource = new BluetoothSensorSource(this);
 
-
+            // gesture recognition
             recognitionService = new GestureRecognitionService(sensorSource);
             recognitionService.RegisterListener(this);
+
+            // start detecting gestures
             recognitionService.StartClassificationMode();
+
+            // keep light on and screen unlocked
+            Window.AddFlags(WindowManagerFlags.KeepScreenOn);
+
+            // get a vibrator service for feedback
             vibrator = (Vibrator) GetSystemService(VibratorService);
+
+            // init screen layout
             SetContentView(Resource.Layout.Main);
 
+            // init server connection
             InitializePresItServiceClient();
 
+            // register button click events
             var authenticateButton = FindViewById<Button>(Resource.Id.AuthenticateButton);
             authenticateButton.Click += async (sender, e) => {
                 var scanner = new MobileBarcodeScanner(this);
@@ -80,18 +101,19 @@ namespace PresIt.Android {
                     recognitionService.StopLearnMode();
                 }
             };
-
-            Window.AddFlags(WindowManagerFlags.KeepScreenOn);
         }
 
+        // switch to next slide
         private void NextSlide() {
             new Thread(() => service.NextSlide(clientId)).Start();
         }
 
+        // switch to previous slide
         private void PreviousSlide() {
             new Thread(() => service.PreviousSlide(clientId)).Start();
         }
 
+        // server connection initialization
         private void InitializePresItServiceClient() {
             var binding = CreateBasicHttp();
             var factory = new ChannelFactory<IPresItService>(binding, serverEndpoint);
@@ -111,6 +133,7 @@ namespace PresIt.Android {
             return binding;
         }
 
+        // hardware button callbacks
         public override bool OnKeyUp(Keycode keyCode, KeyEvent e) {
             switch (keyCode) {
                 case Keycode.VolumeDown:
@@ -128,6 +151,7 @@ namespace PresIt.Android {
             return base.OnKeyDown(keyCode, e);
         }
 
+        // gesture recognition callbacks
         public void OnGestureRecognized(Distribution distribution) {
             if (distribution.BestDistance > 8) return;
             if (distribution.BestMatch == "left") {
