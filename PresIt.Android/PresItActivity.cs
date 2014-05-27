@@ -88,6 +88,9 @@ namespace PresIt.Android {
             var previousSlideButton = FindViewById<Button>(Resource.Id.PreviousSlideButton);
             previousSlideButton.Click += (sender, e) => PreviousSlide();
 
+            var pauseButton = FindViewById<Button>(Resource.Id.PauseButton);
+            pauseButton.Click += (sender, e) => SwitchPause();
+
             var trainingButton = FindViewById<Button>(Resource.Id.TrainingButton);
             trainingButton.Click += (sender, e) => {
                 var text = trainingButton.Text;
