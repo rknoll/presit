@@ -1,11 +1,26 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using Microsoft.Office.Core;
 using Microsoft.Office.Interop.PowerPoint;
 
 namespace PresIt.Windows {
     class PowerPointImporter : ISlidesImporter {
+
+        /// <summary>
+        /// Use an ImageImporter internally to Convert a saved png powerpoint Slide
+        /// </summary>
+        private readonly ISlidesImporter imageImporter;
+
+        public PowerPointImporter() {
+            imageImporter = new ImageImporter();
+        }
+
+        public bool CanHandle(string file) {
+            return file.ToLower().EndsWith(".ppt") ||
+                   file.ToLower().EndsWith(".pptx");
+        }
+
         public IEnumerable<SlidesImporterStatus> Convert(string filename) {
             var pptApplication = new Application();
             var pptPresentation = pptApplication.Presentations.Open(filename, MsoTriState.msoFalse, MsoTriState.msoFalse, MsoTriState.msoFalse);
@@ -19,16 +34,15 @@ namespace PresIt.Windows {
             var currentSlide = 1;
 
             foreach (_Slide slide in pptPresentation.Slides) {
-                slide.Export(fileName, "png", 1024, 768);
-                var fs = new FileStream(fileName, FileMode.Open) {Position = 0};
-                using (var br = new BinaryReader(fs)) {
-                    yield return new SlidesImporterStatus {
-                        CurrentSlideData = br.ReadBytes((Int32) fs.Length),
-                        TotalSlides = slideCount,
-                        CurrentSlideIndex = currentSlide++
-                    };
-                }
-                fs.Close();
+                var h = pptPresentation.PageSetup.SlideHeight / pptPresentation.PageSetup.SlideWidth * 1024.0;
+                slide.Export(fileName, "png", 1024, (int)h);
+
+                var s = imageImporter.Convert(fileName).First();
+                s.TotalSlides = slideCount;
+                s.CurrentSlideIndex = currentSlide++;
+
+                yield return s;
+
                 File.Delete(fileName);
             }
 

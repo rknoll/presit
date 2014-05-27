@@ -26,6 +26,8 @@ namespace PresIt.Windows {
         public PresentationWindow(IMainWindowPresenter dataContext) {
             InitializeComponent();
             context = SynchronizationContext.Current;
+
+            // register callbacks for slide control
             dataContext.NextSlide += (o, args) => context.Post(state => NextSlide(), null);
             dataContext.PreviousSlide += (o, pres) => context.Post(state => PreviousSlide(), null);
         }
@@ -34,6 +36,8 @@ namespace PresIt.Windows {
             dataContext = DataContext as Presentation;
             if (dataContext == null) return;
             if (dataContext.Slides == null) return;
+
+            // get all slides as images from our model
             slides = new List<SlidePreview>();
             foreach (var slide in dataContext.Slides) {
                 slides.Add(SlidePreview.CreateFromSlide(slide, dataContext.Id));
@@ -41,6 +45,7 @@ namespace PresIt.Windows {
             currentSlideIndex = 0;
             nextSlideIndex = -1;
             if (slides.Count == 0) return;
+
             SlideImageView.Source = slides[currentSlideIndex].SlideImage;
         }
 
@@ -52,6 +57,9 @@ namespace PresIt.Windows {
             if (handler != null) handler(this, new PropertyChangedEventArgs(propertyName));
         }
 
+        /// <summary>
+        /// Show Next Slide with an Animation
+        /// </summary>
         private void NextSlide() {
             if (currentStoryboard != null) {
                 currentStoryboard.Stop(this);
@@ -68,7 +76,10 @@ namespace PresIt.Windows {
 
             Animate();
         }
-        
+
+        /// <summary>
+        /// Show Previous Slide with an Animation
+        /// </summary>
         private void PreviousSlide() {
             if (currentStoryboard != null) {
                 currentStoryboard.Stop(this);
@@ -127,6 +138,9 @@ namespace PresIt.Windows {
             currentStoryboard.Begin(this, true);
         }
 
+        /// <summary>
+        /// Keyboard Control
+        /// </summary>
         private void OnPresentationWindowKeyUp(object sender, KeyEventArgs e) {
             switch (e.Key) {
                 case Key.Escape:

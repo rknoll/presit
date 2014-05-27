@@ -7,6 +7,10 @@ using PresIt.Data;
 using PresIt.Windows.Properties;
 
 namespace PresIt.Windows {
+
+    /// <summary>
+    /// Represents a Preview of a Slide, where the raw image is correctly converted already
+    /// </summary>
     public class SlidePreview {
 
         private string slideText;

@@ -15,7 +15,13 @@ using ZXing;
 using ZXing.QrCode;
 
 namespace PresIt.Windows {
+
+    /// <summary>
+    /// Core Logic for PresIt
+    /// </summary>
     public class MainWindowPresenter : INotifyPropertyChanged, IMainWindowPresenter {
+
+        // Server Remote Address (for debugging use: http://localhost:9001/PresItService/)
         public static readonly EndpointAddress EndPoint =
             new EndpointAddress("http://presit.noip.me/PresItService/"); // presit.noip.me
 
@@ -28,11 +34,16 @@ namespace PresIt.Windows {
         private string newPresentationName;
         private IPresItService service;
         private Presentation currentPresentation;
+        private readonly List<ISlidesImporter> importers; 
 
         public MainWindowPresenter() {
+            // init server connection
             InitializePresItServiceClient();
+
+            // create random session ID to be authenticated by user
             var sessionId = Guid.NewGuid().ToString();
 
+            // create and show QR code of session ID
             var writer = new BarcodeWriter {
                 Format = BarcodeFormat.QR_CODE,
                 Options = new QrCodeEncodingOptions {Margin = 1}
@@ -52,6 +63,7 @@ namespace PresIt.Windows {
 
             barcodeImage = img;
 
+            // Connect to server and wait until we get authenticated
             new Thread(() => {
                 while (true) {
                     try {
@@ -63,6 +75,12 @@ namespace PresIt.Windows {
                     }
                 }
             }).Start();
+
+            // create slide importers
+            importers = new List<ISlidesImporter> {
+                new ImageImporter(),
+                new PowerPointImporter()
+            };
         }
 
         public string NewPresentationName {
@@ -113,9 +131,13 @@ namespace PresIt.Windows {
         public event EventHandler<int> GotPresentationSlidesCount;
         public event EventHandler GotPresentationSlide;
         public event EventHandler CancelStartPresentation;
+        public string DroppedFileName { get; set; }
 
         private Thread commandThread;
 
+        /// <summary>
+        /// Save a Presentation and display a progressbar
+        /// </summary>
         public void SavePresentation() {
             new Thread(() => {
                 if (currentPresentation == null) {
@@ -133,6 +155,9 @@ namespace PresIt.Windows {
             }).Start();
         }
 
+        /// <summary>
+        /// Fetch all Presentations and show a progressbar
+        /// </summary>
         public void GetPresentations() {
             new Thread(() => {
                 if (PresentationList != null) {
@@ -148,6 +173,9 @@ namespace PresIt.Windows {
             }).Start();
         }
 
+        /// <summary>
+        /// Start a Presentation and start a Command Receive Thread
+        /// </summary>
         public void StartPresentation(SlidePreview presentationPreview) {
             new Thread(() => {
                 if (ShowPresentation != null) {
@@ -165,6 +193,9 @@ namespace PresIt.Windows {
             }).Start();
         }
 
+        /// <summary>
+        /// Get All Slides of a Presentation
+        /// </summary>
         private Presentation FetchPresentation(SlidePreview presentationPreview) {
             var slides = new List<Slide>();
 
@@ -186,6 +217,9 @@ namespace PresIt.Windows {
             };
         }
         
+        /// <summary>
+        /// Get all Previews of the Presentations
+        /// </summary>
         private IEnumerable<PresentationPreview> FetchPresentationPreviews() {
             var previews = new List<PresentationPreview>();
 
@@ -202,6 +236,9 @@ namespace PresIt.Windows {
             return previews;
         }
 
+        /// <summary>
+        /// Get the next Command from the Server and Execute it
+        /// </summary>
         private void RequestNextCommand() {
             while(true) {
                 try {
@@ -223,10 +260,16 @@ namespace PresIt.Windows {
             }
         }
 
+        /// <summary>
+        /// Stop presentation and command receive thread
+        /// </summary>
         public void StopPresentation() {
             commandThread.Abort();
         }
 
+        /// <summary>
+        /// Edit a Presentation, so fetch and display as a first Step
+        /// </summary>
         public void ChangePresentation(SlidePreview presentationPreview) {
             new Thread(() => {
                 if (EditPresentation != null) {
@@ -241,7 +284,61 @@ namespace PresIt.Windows {
             }).Start();
         }
 
+        /// <summary>
+        /// Import Slides to a specific Position in a Presentation
+        /// </summary>
+        public void ImportSlides(int slideIndex) {
+            var importedSlides = new List<Slide>();
+
+            new Thread(() => {
+                var fileName = DroppedFileName;
+                DroppedFileName = null;
+                if (currentPresentation == null) {
+                    if (CancelStartPresentation != null) CancelStartPresentation(this, null);
+                    return;
+                }
+
+                int slideNumber = 1;
+
+                if (currentPresentation.Slides != null) {
+                    foreach (var slide in currentPresentation.Slides) {
+                        slideNumber++;
+                        importedSlides.Add(slide);
+                    }
+                }
+
+                // if the user dropped a file, import it with an importer
+                if (fileName != null) {
+                    foreach (var importer in importers) {
+                        if (!importer.CanHandle(fileName)) continue;
+                        foreach (var slideData in importer.Convert(fileName)) {
+                            if (GotPresentationSlidesCount != null) GotPresentationSlidesCount(this, slideData.TotalSlides);
+                            if (GotPresentationSlide != null) GotPresentationSlide(this, null);
+                            importedSlides.Insert(slideIndex != -1 ? (slideIndex-1) : slideNumber-1, new Slide {
+                                ImageData = slideData.CurrentSlideData,
+                                SlideNumber = slideIndex != -1 ? slideIndex++ : slideNumber++
+                            });
+                            if (slideIndex != -1) slideNumber++;
+                        }
+                        break;
+                    }
+                }
+
+                if (slideIndex != -1) {
+                    for (slideIndex--; slideIndex < slideNumber - 1; ++slideIndex) {
+                        importedSlides[slideIndex].SlideNumber = slideIndex + 1;
+                    }
+                }
+                
+                currentPresentation.Slides = importedSlides;
+
+                if (EditPresentation != null) EditPresentation(this, currentPresentation);
+            }).Start();
+        }
+
         public event PropertyChangedEventHandler PropertyChanged;
+
+        // Server Connection Setup
 
         private void InitializePresItServiceClient() {
             var binding = CreateBasicHttp();

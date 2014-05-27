@@ -16,28 +16,31 @@ namespace PresIt.Windows {
     public partial class MainWindow {
         private readonly SynchronizationContext context;
         private IMainWindowPresenter dataContext;
-        private string droppedFileName;
         private Presentation currentPresentation;
 
         public MainWindow() {
             InitializeComponent();
             context = SynchronizationContext.Current;
 
+            // initialize view
             OverlayRectangle.Opacity = 0.6;
             OverlayRectangle.Visibility = Visibility.Visible;
             LoginGrid.Visibility = Visibility.Visible;
             NewPresentationGrid.Visibility = Visibility.Hidden;
         }
 
+        /// <summary>
+        /// User dropped a file on the new Presentation button, create a new Presentation with the filename
+        /// </summary>
         private void OnNewPresentationDrop(object sender, DragEventArgs e) {
-            droppedFileName = null;
+            dataContext.DroppedFileName = null;
             if (!e.Data.GetDataPresent(DataFormats.FileDrop)) return;
             var files = (string[]) e.Data.GetData(DataFormats.FileDrop);
             if (files.Length != 1 || string.IsNullOrEmpty(files[0])) return;
-            droppedFileName = files[0];
+            dataContext.DroppedFileName = files[0];
             var file = Path.GetFileName(files[0]);
             if (string.IsNullOrEmpty(file)) {
-                droppedFileName = null;
+                dataContext.DroppedFileName = null;
                 return;
             }
             if (file.Contains(".")) {
@@ -171,7 +174,7 @@ namespace PresIt.Windows {
             dataContext = DataContext as IMainWindowPresenter;
             if (dataContext == null) return;
 
-            // register callbacks
+            // register callbacks after window is ready
             dataContext.IsAuthenticated += (o, args) => context.Post(state => HideLoginScreen(), null);
             dataContext.EditPresentation += (o, pres) => context.Post(state => EditPresentation(pres), null);
             dataContext.PresentationList += (o, pres) => context.Post(state => ShowSelectPresentation(pres), null);
@@ -189,6 +192,7 @@ namespace PresIt.Windows {
         }
 
         private void EditPresentation(Presentation pres) {
+            CancelShowPresentation();
             currentPresentation = pres;
             EditPresentationSlides.ItemsSource = null;
 
@@ -202,83 +206,34 @@ namespace PresIt.Windows {
             if (pres != null) {
                 EditPresentationView.Visibility = Visibility.Visible;
                 EditPresentationName.Content = pres.Name;
-                ImportSlides();
+                if (dataContext.DroppedFileName != null) {
+                    ImportSlides(-1);
+                } else {
+                    ShowSlides();
+                }
             }
 
         }
 
-        private void ImportSlides(int slideIndex = -1) {
-            ImportSlidesTitle.Text = "Importing Slides";
-            ImportSlidesProgressBar.Maximum = 1;
-            ImportSlidesProgressBar.Value = 0;
-            OverlayRectangle.Opacity = 0.6;
-            OverlayRectangle.Visibility = Visibility.Visible;
-            ImportSlidesGrid.Visibility = Visibility.Visible;
-
-            var importedSlides = new List<Slide>();
+        /// <summary>
+        /// Convert all raw-data slides to previews and show them
+        /// </summary>
+        private void ShowSlides() {
             var slides = new ObservableCollection<SlidePreview>();
 
-            new Thread(() => {
-                var fileName = droppedFileName;
-                droppedFileName = null;
-                if (currentPresentation == null) return;
+            if (currentPresentation == null) return;
 
-                int slideNumber = 1;
-
-                if (currentPresentation.Slides != null) {
-                    foreach (var slide in currentPresentation.Slides) {
-                        slideNumber++;
-                        importedSlides.Add(slide);
-                    }
+            if (currentPresentation.Slides != null) {
+                foreach (var slide in currentPresentation.Slides) {
+                    slides.Add(SlidePreview.CreateFromSlide(slide, currentPresentation.Id));
                 }
-
-                if (fileName != null) {
-                    ISlidesImporter importer = null;
-                    if (fileName.ToLower().EndsWith(".ppt") ||
-                        fileName.ToLower().EndsWith(".pptx")) {
-                        importer = new PowerPointImporter();
-                    } else if (fileName.ToLower().EndsWith(".jpg") ||
-                                fileName.ToLower().EndsWith(".jpeg") ||
-                                fileName.ToLower().EndsWith(".png") ||
-                                fileName.ToLower().EndsWith(".bmp")) {
-                        importer = new ImageImporter();
-                    }
-
-                    if (importer != null) {
-                        foreach (var slideData in importer.Convert(fileName)) {
-                            context.Post(state => {
-                                ImportSlidesProgressBar.Maximum = ((SlidesImporterStatus)state).TotalSlides;
-                                ImportSlidesProgressBar.Value = ((SlidesImporterStatus)state).CurrentSlideIndex;
-                            }, slideData);
-                            importedSlides.Insert(slideIndex != -1 ? (slideIndex-1) : slideNumber-1, new Slide {
-                                ImageData = slideData.CurrentSlideData,
-                                SlideNumber = slideIndex != -1 ? slideIndex++ : slideNumber++
-                            });
-                            if (slideIndex != -1) slideNumber++;
-                        }
-                    }
-                }
-
-                if (slideIndex != -1) {
-                    for (slideIndex--; slideIndex < slideNumber - 1; ++slideIndex) {
-                        importedSlides[slideIndex].SlideNumber = slideIndex + 1;
-                    }
-                }
-
-                context.Post(state => {
-                    foreach (var slide in importedSlides) {
-                        slides.Add(SlidePreview.CreateFromSlide(slide, currentPresentation.Id));
-                    }
-                    slides.Add(SlidePreview.CreateAddNewSlide(currentPresentation.Id));
-                    currentPresentation.Slides = importedSlides;
-                    EditPresentationSlides.ItemsSource = slides;
-                    OverlayRectangle.Visibility = Visibility.Hidden;
-                    ImportSlidesGrid.Visibility = Visibility.Hidden;
-                }, null);
-            }).Start();
+            }
+            slides.Add(SlidePreview.CreateAddNewSlide(currentPresentation.Id));
+            EditPresentationSlides.ItemsSource = slides;
+            OverlayRectangle.Visibility = Visibility.Hidden;
+            ImportSlidesGrid.Visibility = Visibility.Hidden;
         }
 
-        
         private void GotPresentationSlidesCount(int count) {
             ImportSlidesProgressBar.Maximum = count;
         }
@@ -295,7 +250,10 @@ namespace PresIt.Windows {
         private void OnCancelNewPresentationClick(object sender, RoutedEventArgs e) {
             HideNewPresentationScreen();
         }
-        
+
+        /// <summary>
+        /// Convert Presentation Previews to Slide Images and show them
+        /// </summary>
         private void ShowSelectPresentation(IEnumerable<PresentationPreview> presentationList) {
             CancelShowPresentation();
             SelectPresentationView.Visibility = Visibility.Visible;
@@ -332,6 +290,9 @@ namespace PresIt.Windows {
             dataContext.StartPresentation(slidePreview);
         }
 
+        /// <summary>
+        /// Start a Presentation
+        /// </summary>
         private void ShowPresentation(Presentation pres) {
             CancelShowPresentation();
             new PresentationWindow(dataContext) {
@@ -340,6 +301,9 @@ namespace PresIt.Windows {
             dataContext.StopPresentation();
         }
 
+        /// <summary>
+        /// User dropped a file on the edit presentation screen, insert the new slide(s) at that position
+        /// </summary>
         private void OnEditPresentationSlideDrop(object sender, DragEventArgs e) {
             if (currentPresentation == null) return;
             var img = sender as Image;
@@ -347,14 +311,14 @@ namespace PresIt.Windows {
             var preview = img.DataContext as SlidePreview;
             if (preview == null) return;
 
-            droppedFileName = null;
+            dataContext.DroppedFileName = null;
             if (!e.Data.GetDataPresent(DataFormats.FileDrop)) return;
             var files = (string[]) e.Data.GetData(DataFormats.FileDrop);
             if (files.Length != 1 || string.IsNullOrEmpty(files[0])) return;
-            droppedFileName = files[0];
+            dataContext.DroppedFileName = files[0];
             var file = Path.GetFileName(files[0]);
             if (string.IsNullOrEmpty(file)) {
-                droppedFileName = null;
+                dataContext.DroppedFileName = null;
                 return;
             }
 
@@ -362,6 +326,17 @@ namespace PresIt.Windows {
             if (!int.TryParse(preview.SlideText, out slideIndex)) slideIndex = -1;
 
             ImportSlides(slideIndex);
+        }
+
+        private void ImportSlides(int slideIndex) {
+            ImportSlidesTitle.Text = "Importing Slides";
+            ImportSlidesProgressBar.Maximum = 1;
+            ImportSlidesProgressBar.Value = 0;
+            OverlayRectangle.Opacity = 0.6;
+            OverlayRectangle.Visibility = Visibility.Visible;
+            ImportSlidesGrid.Visibility = Visibility.Visible;
+
+            dataContext.ImportSlides(slideIndex);
         }
 
         private void OnSelectPresentationListSelectionChanged(object sender, SelectionChangedEventArgs e) {
