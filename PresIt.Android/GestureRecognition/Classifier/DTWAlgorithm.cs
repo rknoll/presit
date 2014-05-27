@@ -44,8 +44,8 @@ namespace PresIt.Android.GestureRecognition.Classifier {
                     if (i == 0) {
                         costMatrix[i, j] = costMatrix[i, j - 1] + distMatrix[i, j];
                     } else {
-                        double minCost, cost;
-                        minCost = costMatrix[i - 1, j - 1] + distMatrix[i, j];
+                        double cost;
+                        var minCost = costMatrix[i - 1, j - 1] + distMatrix[i, j];
                         if ((cost = costMatrix[i - 1, j] + distMatrix[i, j]) < minCost) {
                             minCost = cost + OffsetPenalty;
                         }

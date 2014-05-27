@@ -15,8 +15,8 @@ namespace PresIt.Android.GestureRecognition.Sensors {
             this.context = context;
         }
 
-        public void SetSensorListener(ISensorListener listener) {
-            this.listener = listener;
+        public void SetSensorListener(ISensorListener l) {
+            listener = l;
             if (listener != null) {
                 Start();
             } else {
@@ -78,8 +78,6 @@ namespace PresIt.Android.GestureRecognition.Sensors {
                     return;
                 }
 
-                short x, y, z;
-
                 while (true) {
                     int b = socket.InputStream.ReadByte();
                     if (b == 2) {
@@ -87,7 +85,7 @@ namespace PresIt.Android.GestureRecognition.Sensors {
                         if (b < 0) {
                             continue;
                         }
-                        x = (short) (((short) b) << 8);
+                        var x = (short) (((short) b) << 8);
                         b = socket.InputStream.ReadByte();
                         if (b < 0) {
                             continue;
@@ -97,7 +95,7 @@ namespace PresIt.Android.GestureRecognition.Sensors {
                         if (b < 0) {
                             continue;
                         }
-                        y = (short) (((short) b) << 8);
+                        var y = (short) (((short) b) << 8);
                         b = socket.InputStream.ReadByte();
                         if (b < 0) {
                             continue;
@@ -107,7 +105,7 @@ namespace PresIt.Android.GestureRecognition.Sensors {
                         if (b < 0) {
                             continue;
                         }
-                        z = (short) (((short) b) << 8);
+                        var z = (short) (((short) b) << 8);
                         b = socket.InputStream.ReadByte();
                         if (b < 0) {
                             continue;

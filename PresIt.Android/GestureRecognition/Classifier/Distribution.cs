@@ -1,5 +1,4 @@
 using System.Collections.Generic;
-using Java.Util;
 
 namespace PresIt.Android.GestureRecognition.Classifier {
     public class Distribution {

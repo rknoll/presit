@@ -27,7 +27,6 @@ namespace PresIt.Windows {
 
         private string newPresentationName;
         private IPresItService service;
-        private bool isAuthenticated;
         private Presentation currentPresentation;
 
         public MainWindowPresenter() {
@@ -58,7 +57,6 @@ namespace PresIt.Windows {
                     try {
                         clientId = service.IsAuthenticated(sessionId);
                         if (clientId == null) continue;
-                        isAuthenticated = true;
                         if (IsAuthenticated != null) IsAuthenticated(this, EventArgs.Empty);
                         break;
                     } catch (TimeoutException) {
@@ -127,8 +125,8 @@ namespace PresIt.Windows {
                 var slides = currentPresentation.Slides == null ? new List<Slide>() : currentPresentation.Slides.ToList();
                 if (GotPresentationSlidesCount != null) GotPresentationSlidesCount(this, slides.Count);
                 service.UpdateSlidesCount(clientId, currentPresentation.Id, slides.Count);
-                for (var i = 0; i < slides.Count; ++i) {
-                    service.UpdateSlide(clientId, currentPresentation.Id, slides[i]);
+                foreach (var slide in slides) {
+                    service.UpdateSlide(clientId, currentPresentation.Id, slide);
                     if (GotPresentationSlide != null) GotPresentationSlide(this, null);
                 }
                 if (PresentationSaved != null) PresentationSaved(this, null);
@@ -168,10 +166,6 @@ namespace PresIt.Windows {
         }
 
         private Presentation FetchPresentation(SlidePreview presentationPreview) {
-            var p = new Presentation();
-            p.Id = presentationPreview.PresentationId;
-            p.Name = presentationPreview.SlideText;
-            p.Owner = clientId;
             var slides = new List<Slide>();
 
             var cnt = service.GetPresentationSlidesCount(clientId, presentationPreview.PresentationId);
@@ -183,8 +177,13 @@ namespace PresIt.Windows {
                 if (GotPresentationSlide != null) GotPresentationSlide(this, null);
                 slides.Add(slide);
             }
-            p.Slides = slides;
-            return p;
+
+            return new Presentation {
+                Id = presentationPreview.PresentationId,
+                Name = presentationPreview.SlideText,
+                Owner = clientId,
+                Slides = slides
+            };
         }
         
         private IEnumerable<PresentationPreview> FetchPresentationPreviews() {
@@ -199,6 +198,7 @@ namespace PresIt.Windows {
                 if (GotPresentationSlide != null) GotPresentationSlide(this, null);
                 previews.Add(preview);
             }
+
             return previews;
         }
 

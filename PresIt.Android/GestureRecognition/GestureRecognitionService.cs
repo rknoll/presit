@@ -1,5 +1,4 @@
 using System.Collections.Generic;
-using Android.Content;
 using PresIt.Android.GestureRecognition.Classifier;
 using PresIt.Android.GestureRecognition.Classifier.FeatureExtraction;
 using PresIt.Android.GestureRecognition.Recorder;
@@ -67,12 +66,10 @@ namespace PresIt.Android.GestureRecognition {
 		public void StartLearnMode(string gestureName) {
 			activeLearnLabel = gestureName;
 			IsLearning = true;
-			// recorder.setRecordMode(GestureRecorder.RecordMode.PUSH_TO_GESTURE);
 		}
 
 		public void StopLearnMode() {
 			IsLearning = false;
-			// recorder.setRecordMode(GestureRecorder.RecordMode.MOTION_DETECTION);
 		}
 
 		public void UnregisterListener(IGestureRecognitionListener listener) {

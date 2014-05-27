@@ -1,6 +1,5 @@
 using System.Collections.Generic;
 using System.Linq;
-using Android.Content;
 using PresIt.Android.GestureRecognition.Classifier.FeatureExtraction;
 
 namespace PresIt.Android.GestureRecognition.Classifier {

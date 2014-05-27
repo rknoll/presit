@@ -4,19 +4,18 @@ using Android.Hardware;
 namespace PresIt.Android.GestureRecognition.Sensors {
     public class PhoneSensorSource : Java.Lang.Object, ISensorEventListener, ISensorSource {
         private ISensorListener listener;
-        private Context context;
+        private readonly Context context;
         private SensorManager sensorManager;
 
         public PhoneSensorSource(Context context) {
             this.context = context;
         }
 
-        public void SetSensorListener(ISensorListener listener) {
-            this.listener = listener;
+        public void SetSensorListener(ISensorListener l) {
+            listener = l;
             if (listener != null) {
                 sensorManager = (SensorManager) context.GetSystemService(Context.SensorService);
-                sensorManager.RegisterListener(this, sensorManager.GetDefaultSensor(SensorType.Accelerometer),
-                    SensorDelay.Game);
+                sensorManager.RegisterListener(this, sensorManager.GetDefaultSensor(SensorType.Accelerometer), SensorDelay.Game);
             } else {
                 if (sensorManager != null) {
                     sensorManager.UnregisterListener(this);

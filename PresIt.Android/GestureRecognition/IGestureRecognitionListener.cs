@@ -1,4 +1,5 @@
 using PresIt.Android.GestureRecognition.Classifier;
+
 namespace PresIt.Android.GestureRecognition {
     public interface IGestureRecognitionListener {
         void OnGestureRecognized(Distribution distribution);

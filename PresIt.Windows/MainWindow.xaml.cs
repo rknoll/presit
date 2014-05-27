@@ -80,7 +80,6 @@ namespace PresIt.Windows {
             storyboard.Children.Add(opacityAnimation);
             storyboard.Children.Add(topAnimation);
 
-            // start animation
             storyboard.Begin();
         }
 
@@ -128,7 +127,6 @@ namespace PresIt.Windows {
                 NewPresentationGrid.Visibility = Visibility.Hidden;
             };
 
-            // start animation
             storyboard.Begin();
         }
 
@@ -166,20 +164,20 @@ namespace PresIt.Windows {
                 LoginGrid.Visibility = Visibility.Collapsed;
             };
 
-            // start animation
             storyboard.Begin();
         }
 
         private void OnMainWindowSourceInitialized(object sender, EventArgs e) {
             dataContext = DataContext as IMainWindowPresenter;
             if (dataContext == null) return;
+
+            // register callbacks
             dataContext.IsAuthenticated += (o, args) => context.Post(state => HideLoginScreen(), null);
             dataContext.EditPresentation += (o, pres) => context.Post(state => EditPresentation(pres), null);
             dataContext.PresentationList += (o, pres) => context.Post(state => ShowSelectPresentation(pres), null);
             dataContext.PresentationSaved += (o, pres) => context.Post(state => HideEditPresentation(), null);
             dataContext.PresentationDeleted += (o, pres) => context.Post(state => HideEditPresentation(), null);
             dataContext.ShowPresentation += (o, pres) => context.Post(state => ShowPresentation(pres), null);
-
             dataContext.CancelStartPresentation += (o, args) => context.Post(state => CancelShowPresentation(), null);
             dataContext.GotPresentationSlidesCount += (o, count) => context.Post(state => GotPresentationSlidesCount(count), null);
             dataContext.GotPresentationSlide += (o, args) => context.Post(state => GotPresentationSlide(), null);
@@ -336,9 +334,9 @@ namespace PresIt.Windows {
 
         private void ShowPresentation(Presentation pres) {
             CancelShowPresentation();
-            var presentationView = new PresentationWindow(dataContext);
-            presentationView.DataContext = pres;
-            presentationView.ShowDialog();
+            new PresentationWindow(dataContext) {
+                DataContext = pres
+            }.ShowDialog();
             dataContext.StopPresentation();
         }
 

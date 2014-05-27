@@ -1,10 +1,8 @@
 ﻿using System;
-using System.Linq;
 using System.ServiceModel;
 using System.ServiceModel.Channels;
 using System.Threading;
 using Android.App;
-using Android.Bluetooth;
 using Android.OS;
 using Android.Preferences;
 using Android.Views;
@@ -16,7 +14,7 @@ using PresIt.Data;
 using ZXing.Mobile;
 
 namespace PresIt.Android {
-    [Activity(Label = "PresIt.Android", MainLauncher = true, Icon = "@drawable/icon")]
+    [Activity(Label = "PresIt", MainLauncher = true, Icon = "@drawable/icon")]
     public class Activity1 : Activity, IGestureRecognitionListener {
         private const string ServerAddress = "presit.noip.me";
         private static readonly EndpointAddress serverEndpoint = new EndpointAddress("http://" + ServerAddress + "/PresItService/");
@@ -82,20 +80,6 @@ namespace PresIt.Android {
                     recognitionService.StopLearnMode();
                 }
             };
-            /*
-            IEnumerable<PresentationPreview> presentationPreviews = service.GetPresentationPreviews(clientId);
-            PresentationPreview firstPresentation = presentationPreviews == null
-                ? null
-                : presentationPreviews.FirstOrDefault();
-
-            if (firstPresentation != null && firstPresentation.FirstSlide != null &&
-                firstPresentation.FirstSlide.ImageData != null) {
-                var image = FindViewById<ImageView>(Resource.Id.image);
-                Bitmap bmp = BitmapFactory.DecodeByteArray(firstPresentation.FirstSlide.ImageData, 0,
-                    firstPresentation.FirstSlide.ImageData.Length);
-                image.SetImageBitmap(bmp);
-            }
-            */
 
             Window.AddFlags(WindowManagerFlags.KeepScreenOn);
         }
@@ -158,7 +142,6 @@ namespace PresIt.Android {
         }
 
         public void OnTrainingSetDeleted() {
-            
         }
     }
 }

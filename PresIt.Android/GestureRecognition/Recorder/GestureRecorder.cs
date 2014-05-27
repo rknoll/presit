@@ -1,7 +1,5 @@
 using System;
 using System.Collections.Generic;
-using Android.Content;
-using Android.Hardware;
 using PresIt.Android.GestureRecognition.Sensors;
 using ISensorListener = PresIt.Android.GestureRecognition.Sensors.ISensorListener;
 
@@ -30,9 +28,7 @@ namespace PresIt.Android.GestureRecognition.Recorder {
         }
 
         private double CalcVectorNorm(double[] values) {
-            return
-                Math.Sqrt(values[0]*values[0] + values[1]*values[1] +
-                          values[2]*values[2]) - 9.9;
+            return Math.Sqrt(values[0]*values[0] + values[1]*values[1] + values[2]*values[2]) - 9.9;
         }
 
         public void OnPushToGesture(bool pushed) {
@@ -49,13 +45,13 @@ namespace PresIt.Android.GestureRecognition.Recorder {
             }
         }
 
-        public void RegisterListener(IGestureRecorderListener listener) {
-            this.listener = listener;
+        public void RegisterListener(IGestureRecorderListener l) {
+            listener = l;
             Start();
         }
 
-        public void UnregisterListener(IGestureRecorderListener listener) {
-            this.listener = null;
+        public void UnregisterListener() {
+            listener = null;
             Stop();
         }
 
