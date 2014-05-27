@@ -8,13 +8,19 @@ namespace PresIt.Data {
         Presentation CreatePresentation(string clientId, string name);
 
         [OperationContract]
-        bool UpdateSlides(string clientId, Presentation presentation);
+        bool UpdateSlide(string clientId, string presentationId, Slide slide);
+
+        [OperationContract]
+        bool UpdateSlidesCount(string clientId, string presentationId, int slidesCount);
 
         [OperationContract]
         bool DeletePresentation(string clientId, string presentationId);
 
         [OperationContract]
-        Presentation GetPresentation(string clientId, string presentationId);
+        Slide GetPresentationSlide(string clientId, string presentationId, int slideIndex);
+
+        [OperationContract]
+        int GetPresentationSlidesCount(string clientId, string presentationId);
 
         [OperationContract]
         void AuthenticateId(string clientId, string sessionId);
@@ -32,6 +38,9 @@ namespace PresIt.Data {
         void PreviousSlide(string clientId);
 
         [OperationContract]
-        IEnumerable<PresentationPreview> GetPresentationPreviews(string clientId);
+        int GetPresentationCount(string clientId);
+
+        [OperationContract]
+        PresentationPreview GetPresentationPreview(string clientId, int presentationIndex);
     }
 }

@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Drawing.Imaging;
 using System.IO;
+using System.Linq;
 using System.Runtime.CompilerServices;
 using System.ServiceModel;
 using System.ServiceModel.Channels;
@@ -22,9 +23,8 @@ namespace PresIt.Windows {
         private string clientId;
 
         private ICommand newPresentationCommand;
-        private ICommand getPresentationsCommand;
-        private ICommand savePresentationCommand;
         private ICommand deletePresentationCommand;
+
         private string newPresentationName;
         private IPresItService service;
         private bool isAuthenticated;
@@ -95,23 +95,6 @@ namespace PresIt.Windows {
             }
         }
         
-        public ICommand GetPresentationsCommand {
-            get {
-                return getPresentationsCommand ?? (getPresentationsCommand = new RelayCommand(param => {
-                    if (PresentationList != null) PresentationList(this, service.GetPresentationPreviews(clientId));
-                }, o => isAuthenticated));
-            }
-        }
-        
-        public ICommand SavePresentationCommand {
-            get {
-                return savePresentationCommand ?? (savePresentationCommand = new RelayCommand(param => {
-                    service.UpdateSlides(clientId, currentPresentation);
-                    if (PresentationSaved != null) PresentationSaved(this, null);
-                }, o => currentPresentation != null));
-            }
-        }
-
         public ICommand DeletePresentationCommand {
             get {
                 return deletePresentationCommand ?? (deletePresentationCommand = new RelayCommand(param => {
@@ -129,15 +112,94 @@ namespace PresIt.Windows {
         public event EventHandler PresentationDeleted;
         public event EventHandler NextSlide;
         public event EventHandler PreviousSlide;
+        public event EventHandler<int> GotPresentationSlidesCount;
+        public event EventHandler GotPresentationSlide;
+        public event EventHandler CancelStartPresentation;
 
         private Thread commandThread;
 
-        public void StartPresentation(string presentationId) {
-            if (ShowPresentation != null) {
-                ShowPresentation(this, service.GetPresentation(clientId, presentationId));
-                commandThread = new Thread(RequestNextCommand);
-                commandThread.Start();
+        public void SavePresentation() {
+            new Thread(() => {
+                if (currentPresentation == null) {
+                    if (CancelStartPresentation != null) CancelStartPresentation(this, null);
+                    return;
+                }
+                var slides = currentPresentation.Slides == null ? new List<Slide>() : currentPresentation.Slides.ToList();
+                if (GotPresentationSlidesCount != null) GotPresentationSlidesCount(this, slides.Count);
+                service.UpdateSlidesCount(clientId, currentPresentation.Id, slides.Count);
+                for (var i = 0; i < slides.Count; ++i) {
+                    service.UpdateSlide(clientId, currentPresentation.Id, slides[i]);
+                    if (GotPresentationSlide != null) GotPresentationSlide(this, null);
+                }
+                if (PresentationSaved != null) PresentationSaved(this, null);
+            }).Start();
+        }
+
+        public void GetPresentations() {
+            new Thread(() => {
+                if (PresentationList != null) {
+                    var previews = FetchPresentationPreviews();
+                    if (previews == null) {
+                        if (CancelStartPresentation != null) CancelStartPresentation(this, null);
+                        return;
+                    }
+                    if (PresentationList != null) PresentationList(this, previews);
+                } else {
+                    if (CancelStartPresentation != null) CancelStartPresentation(this, null);
+                }
+            }).Start();
+        }
+
+        public void StartPresentation(SlidePreview presentationPreview) {
+            new Thread(() => {
+                if (ShowPresentation != null) {
+                    var p = FetchPresentation(presentationPreview);
+                    if (p == null) {
+                        if (CancelStartPresentation != null) CancelStartPresentation(this, null);
+                        return;
+                    }
+                    ShowPresentation(this, p);
+                    commandThread = new Thread(RequestNextCommand);
+                    commandThread.Start();
+                } else {
+                    if (CancelStartPresentation != null) CancelStartPresentation(this, null);
+                }
+            }).Start();
+        }
+
+        private Presentation FetchPresentation(SlidePreview presentationPreview) {
+            var p = new Presentation();
+            p.Id = presentationPreview.PresentationId;
+            p.Name = presentationPreview.SlideText;
+            p.Owner = clientId;
+            var slides = new List<Slide>();
+
+            var cnt = service.GetPresentationSlidesCount(clientId, presentationPreview.PresentationId);
+            if (cnt < 0) return null;
+            if (GotPresentationSlidesCount != null) GotPresentationSlidesCount(this, cnt);
+            for (var i = 0; i < cnt; ++i) {
+                var slide = service.GetPresentationSlide(clientId, presentationPreview.PresentationId, i);
+                if (slide == null) return null;
+                if (GotPresentationSlide != null) GotPresentationSlide(this, null);
+                slides.Add(slide);
             }
+            p.Slides = slides;
+            return p;
+        }
+        
+        private IEnumerable<PresentationPreview> FetchPresentationPreviews() {
+            var previews = new List<PresentationPreview>();
+
+            var cnt = service.GetPresentationCount(clientId);
+            if (cnt < 0) return null;
+            if (GotPresentationSlidesCount != null) GotPresentationSlidesCount(this, cnt);
+            for (var i = 0; i < cnt; ++i) {
+                var preview = service.GetPresentationPreview(clientId, i);
+                if (preview == null) return null;
+                if (GotPresentationSlide != null) GotPresentationSlide(this, null);
+                previews.Add(preview);
+            }
+            return previews;
         }
 
         private void RequestNextCommand() {
@@ -165,12 +227,18 @@ namespace PresIt.Windows {
             commandThread.Abort();
         }
 
-        public void ChangePresentation(string presentationId) {
-            if (EditPresentation != null) {
-                currentPresentation = service.GetPresentation(clientId, presentationId);
-                CommandManager.InvalidateRequerySuggested();
-                EditPresentation(this, currentPresentation);
-            }
+        public void ChangePresentation(SlidePreview presentationPreview) {
+            new Thread(() => {
+                if (EditPresentation != null) {
+                    var p = FetchPresentation(presentationPreview);
+                    if (p == null) return;
+                    currentPresentation = p;
+                    CommandManager.InvalidateRequerySuggested();
+                    EditPresentation(this, currentPresentation);
+                } else {
+                    if (CancelStartPresentation != null) CancelStartPresentation(this, null);
+                }
+            }).Start();
         }
 
         public event PropertyChangedEventHandler PropertyChanged;

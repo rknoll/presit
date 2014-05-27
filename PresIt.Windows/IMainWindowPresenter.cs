@@ -14,8 +14,14 @@ namespace PresIt.Windows {
         event EventHandler NextSlide;
         event EventHandler PreviousSlide;
 
-        void StartPresentation(string presentationId);
+        event EventHandler<int> GotPresentationSlidesCount;
+        event EventHandler GotPresentationSlide;
+        event EventHandler CancelStartPresentation;
+
+        void SavePresentation();
+        void GetPresentations();
+        void StartPresentation(SlidePreview presentationPrview);
         void StopPresentation();
-        void ChangePresentation(string presentationId);
+        void ChangePresentation(SlidePreview presentationPrview);
     }
 }

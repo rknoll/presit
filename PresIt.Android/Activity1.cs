@@ -96,6 +96,8 @@ namespace PresIt.Android {
                 image.SetImageBitmap(bmp);
             }
             */
+
+            Window.AddFlags(WindowManagerFlags.KeepScreenOn);
         }
 
         private void NextSlide() {

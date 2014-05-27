@@ -4,7 +4,6 @@ using System.Collections.ObjectModel;
 using System.Threading;
 using System.Windows;
 using System.Windows.Controls;
-using System.Windows.Data;
 using System.Windows.Input;
 using System.Windows.Media.Animation;
 using System.IO;
@@ -122,7 +121,8 @@ namespace PresIt.Windows {
             
             storyboard.Completed += (sender1, eventArgs) => {
                 if (!fast) {
-                    OverlayRectangle.Visibility = Visibility.Collapsed;
+                    OverlayRectangle.BeginAnimation(OpacityProperty, null);
+                    OverlayRectangle.Visibility = Visibility.Hidden;
                 }
 
                 NewPresentationGrid.Visibility = Visibility.Hidden;
@@ -161,7 +161,8 @@ namespace PresIt.Windows {
             storyboard.Children.Add(opacityAnimation2);
 
             storyboard.Completed += (sender1, eventArgs) => {
-                OverlayRectangle.Visibility = Visibility.Collapsed;
+                OverlayRectangle.BeginAnimation(OpacityProperty, null);
+                OverlayRectangle.Visibility = Visibility.Hidden;
                 LoginGrid.Visibility = Visibility.Collapsed;
             };
 
@@ -178,9 +179,14 @@ namespace PresIt.Windows {
             dataContext.PresentationSaved += (o, pres) => context.Post(state => HideEditPresentation(), null);
             dataContext.PresentationDeleted += (o, pres) => context.Post(state => HideEditPresentation(), null);
             dataContext.ShowPresentation += (o, pres) => context.Post(state => ShowPresentation(pres), null);
+
+            dataContext.CancelStartPresentation += (o, args) => context.Post(state => CancelShowPresentation(), null);
+            dataContext.GotPresentationSlidesCount += (o, count) => context.Post(state => GotPresentationSlidesCount(count), null);
+            dataContext.GotPresentationSlide += (o, args) => context.Post(state => GotPresentationSlide(), null);
         }
 
         private void HideEditPresentation() {
+            CancelShowPresentation();
             EditPresentationView.Visibility = Visibility.Hidden;
         }
 
@@ -204,6 +210,7 @@ namespace PresIt.Windows {
         }
 
         private void ImportSlides(int slideIndex = -1) {
+            ImportSlidesTitle.Text = "Importing Slides";
             ImportSlidesProgressBar.Maximum = 1;
             ImportSlidesProgressBar.Value = 0;
             OverlayRectangle.Opacity = 0.6;
@@ -273,11 +280,26 @@ namespace PresIt.Windows {
             }).Start();
         }
 
+        
+        private void GotPresentationSlidesCount(int count) {
+            ImportSlidesProgressBar.Maximum = count;
+        }
+        
+        private void GotPresentationSlide() {
+            ImportSlidesProgressBar.Value ++;
+        }
+
+        private void CancelShowPresentation() {
+            OverlayRectangle.Visibility = Visibility.Hidden;
+            ImportSlidesGrid.Visibility = Visibility.Hidden;
+        }
+
         private void OnCancelNewPresentationClick(object sender, RoutedEventArgs e) {
             HideNewPresentationScreen();
         }
         
         private void ShowSelectPresentation(IEnumerable<PresentationPreview> presentationList) {
+            CancelShowPresentation();
             SelectPresentationView.Visibility = Visibility.Visible;
 
             var presentations = new ObservableCollection<SlidePreview>();
@@ -301,10 +323,19 @@ namespace PresIt.Windows {
             if (e.LeftButton != MouseButtonState.Pressed || e.ClickCount != 2) return;
             var slidePreview = SelectPresentationList.SelectedItem as SlidePreview;
             if (slidePreview == null || slidePreview.PresentationId == null) return;
-            dataContext.StartPresentation(slidePreview.PresentationId);
+
+            ImportSlidesProgressBar.Maximum = 1;
+            ImportSlidesProgressBar.Value = 0;
+            ImportSlidesTitle.Text = "Loading Slides";
+            OverlayRectangle.Opacity = 0.6;
+            OverlayRectangle.Visibility = Visibility.Visible;
+            ImportSlidesGrid.Visibility = Visibility.Visible;
+
+            dataContext.StartPresentation(slidePreview);
         }
 
         private void ShowPresentation(Presentation pres) {
+            CancelShowPresentation();
             var presentationView = new PresentationWindow(dataContext);
             presentationView.DataContext = pres;
             presentationView.ShowDialog();
@@ -343,7 +374,42 @@ namespace PresIt.Windows {
         private void OnEditPresentationClick(object sender, RoutedEventArgs e) {
             var slidePreview = SelectPresentationList.SelectedItem as SlidePreview;
             if (slidePreview == null || slidePreview.PresentationId == null) return;
-            dataContext.ChangePresentation(slidePreview.PresentationId);
+
+            ImportSlidesTitle.Text = "Loading Slides";
+            ImportSlidesProgressBar.Maximum = 1;
+            ImportSlidesProgressBar.Value = 0;
+            OverlayRectangle.Opacity = 0.6;
+            OverlayRectangle.Visibility = Visibility.Visible;
+            ImportSlidesGrid.Visibility = Visibility.Visible;
+
+            dataContext.ChangePresentation(slidePreview);
+        }
+
+        private void OnSavePresentationClick(object sender, RoutedEventArgs e) {
+            ImportSlidesProgressBar.Maximum = 1;
+            ImportSlidesProgressBar.Value = 0;
+            ImportSlidesTitle.Text = "Saving Slides";
+            OverlayRectangle.Opacity = 0.6;
+            OverlayRectangle.Visibility = Visibility.Visible;
+            ImportSlidesGrid.Visibility = Visibility.Visible;
+
+            dataContext.SavePresentation();
+        }
+
+        protected override void OnClosed(EventArgs e) {
+            base.OnClosed(e);
+            Environment.Exit(0);
+        }
+
+        private void OnGetPresentationsButtonClick(object sender, RoutedEventArgs e) {
+            ImportSlidesTitle.Text = "Loading Presentations";
+            ImportSlidesProgressBar.Maximum = 1;
+            ImportSlidesProgressBar.Value = 0;
+            OverlayRectangle.Opacity = 0.6;
+            OverlayRectangle.Visibility = Visibility.Visible;
+            ImportSlidesGrid.Visibility = Visibility.Visible;
+
+            dataContext.GetPresentations();
         }
     }
 }

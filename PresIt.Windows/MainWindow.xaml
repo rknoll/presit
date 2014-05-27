@@ -54,7 +54,7 @@
                 <WrapPanel x:Name="ImportSlidesContent" HorizontalAlignment="Center" VerticalAlignment="Center">
                     <GroupBox Background="#666666" Foreground="White" VerticalAlignment="Center">
                         <GroupBox.Header>
-                            <TextBlock Padding="0 0 0 5" Text="Importing Slides" Foreground="White" />
+                            <TextBlock x:Name="ImportSlidesTitle" Padding="0 0 0 5" Foreground="White" />
                         </GroupBox.Header>
                         <StackPanel>
                             <ProgressBar x:Name="ImportSlidesProgressBar" Margin="10" Width="150" Height="20" />
@@ -81,7 +81,7 @@
         <DockPanel x:Name="EditPresentationView" Background="White" ZIndex="1" Visibility="Hidden">
             <Label DockPanel.Dock="Top" x:Name="EditPresentationName" />
             <DockPanel DockPanel.Dock="Bottom" LastChildFill="False">
-                <Button DockPanel.Dock="Right" Padding="10 1 10 1" Command="{Binding SavePresentationCommand}">Save</Button>
+                <Button DockPanel.Dock="Right" Padding="10 1 10 1" Click="OnSavePresentationClick">Save</Button>
                 <Button DockPanel.Dock="Left" Padding="10 1 10 1" Command="{Binding DeletePresentationCommand}">Delete</Button>
             </DockPanel>
             <ListBox x:Name="EditPresentationSlides">
@@ -151,7 +151,7 @@
                     Style="{StaticResource FlatButtonStyle}" Grid.Column="0" AllowDrop="True">
                 <TextBlock TextAlignment="Center" TextWrapping="Wrap">Create a new Presentation</TextBlock>
             </Button>
-            <Button Style="{StaticResource FlatButtonStyle}" Grid.Column="1" Command="{Binding GetPresentationsCommand}">
+            <Button Style="{StaticResource FlatButtonStyle}" Grid.Column="1" Click="OnGetPresentationsButtonClick">
                 <TextBlock TextAlignment="Center" TextWrapping="Wrap">Start a Presentation</TextBlock>
             </Button>
         </Grid>

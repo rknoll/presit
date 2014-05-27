@@ -32,6 +32,27 @@ namespace PresIt.Service {
             return presentation;
         }
 
+        public bool UpdateSlide(string clientId, string presentationId, Slide slide) {
+            if (string.IsNullOrEmpty(clientId)) return false;
+            if (string.IsNullOrEmpty(presentationId) || !presentations.ContainsKey(presentationId)) return false;
+            if (presentations[presentationId].Owner != clientId) return false;
+            if (presentations[presentationId].Slides == null) return false;
+            if (slide == null) return false;
+            var slides = presentations[presentationId].Slides.ToList();
+            if (slides.Count <= (slide.SlideNumber - 1)) return false;
+            slides[slide.SlideNumber - 1] = slide;
+            presentations[presentationId].Slides = slides;
+            return true;
+        }
+
+        public bool UpdateSlidesCount(string clientId, string presentationId, int slidesCount) {
+            if (string.IsNullOrEmpty(clientId)) return false;
+            if (string.IsNullOrEmpty(presentationId) || !presentations.ContainsKey(presentationId)) return false;
+            if (presentations[presentationId].Owner != clientId) return false;
+            presentations[presentationId].Slides = new List<Slide>(new Slide[slidesCount]);
+            return true;
+        }
+
         public bool DeletePresentation(string clientId, string presentationId) {
             if (string.IsNullOrEmpty(clientId)) return false;
             if (string.IsNullOrEmpty(presentationId) || !presentations.ContainsKey(presentationId)) return false;
@@ -40,11 +61,22 @@ namespace PresIt.Service {
             return true;
         }
 
-        public Presentation GetPresentation(string clientId, string presentationId) {
+        public Slide GetPresentationSlide(string clientId, string presentationId, int slideIndex) {
             if (string.IsNullOrEmpty(clientId)) return null;
             if (string.IsNullOrEmpty(presentationId) || !presentations.ContainsKey(presentationId)) return null;
             if (presentations[presentationId].Owner != clientId) return null;
-            return presentations[presentationId];
+            if (presentations[presentationId].Slides == null) return null;
+            var slides = presentations[presentationId].Slides.ToList();
+            if (slides.Count <= slideIndex || slideIndex < 0) return null;
+            return slides[slideIndex];
+        }
+
+        public int GetPresentationSlidesCount(string clientId, string presentationId) {
+            if (string.IsNullOrEmpty(clientId)) return -1;
+            if (string.IsNullOrEmpty(presentationId) || !presentations.ContainsKey(presentationId)) return -1;
+            if (presentations[presentationId].Owner != clientId) return -1;
+            if (presentations[presentationId].Slides == null) return 0;
+            return presentations[presentationId].Slides.Count();
         }
 
         public void AuthenticateId(string clientId, string sessionId) {
@@ -94,21 +126,19 @@ namespace PresIt.Service {
             }
         }
 
-        public IEnumerable<PresentationPreview> GetPresentationPreviews(string clientId) {
+        public int GetPresentationCount(string clientId) {
+            if (string.IsNullOrEmpty(clientId)) return -1;
+            return presentations.Values.Count(p => p.Owner == clientId);
+        }
+
+        public PresentationPreview GetPresentationPreview(string clientId, int presentationIndex) {
             if (string.IsNullOrEmpty(clientId)) return null;
-            return presentations.Values.Where(p => p.Owner == clientId).Select(presentation => new PresentationPreview {
+            return presentations.Values.Where(p => p.Owner == clientId).Skip(presentationIndex).Select(presentation => new PresentationPreview {
                 Id = presentation.Id,
                 Name = presentation.Name,
                 FirstSlide = presentation.Slides != null ? presentation.Slides.FirstOrDefault() : null
-            });
+            }).FirstOrDefault();
         }
 
-        public bool UpdateSlides(string clientId, Presentation presentation) {
-            if (string.IsNullOrEmpty(clientId)) return false;
-            if (presentation == null || string.IsNullOrEmpty(presentation.Id) || !presentations.ContainsKey(presentation.Id)) return false;
-            if (presentations[presentation.Id].Owner != clientId) return false;
-            presentations[presentation.Id].Slides = presentation.Slides;
-            return true;
-        }
     }
 }
