@@ -1,0 +1,33 @@
+﻿<Window x:Class="MYDtwTest.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:local="clr-namespace:MYDtwTest"
+        xmlns:ports="clr-namespace:System.IO.Ports;assembly=System"
+        Title="MainWindow" Height="250" Width="350" ResizeMode="NoResize">
+    <Window.Resources>
+        <ObjectDataProvider ObjectType="{x:Type ports:SerialPort}" MethodName="GetPortNames" x:Key="portNames"/>
+    </Window.Resources>
+    <Grid>
+        <DockPanel>
+            <GroupBox DockPanel.Dock="Top">
+                <StackPanel Orientation="Horizontal">
+                    <ComboBox x:Name="SerialPortComboBox" MinWidth="70" ItemsSource="{Binding Source={StaticResource portNames}}"></ComboBox>
+                    <Button x:Name="ConnectButton" MinWidth="70" Click="OnConectButtonClicked">Connect</Button>
+                    <Button x:Name="TrainButton" MinWidth="70" Click="OnTrainButtonClicked">Train</Button>
+                    <Button x:Name="TestButton" MinWidth="70" Click="OnTestButtonClicked">Test</Button>
+                </StackPanel>
+            </GroupBox>
+            <GroupBox>
+                <StackPanel Width="200" HorizontalAlignment="Center">
+                    <Rectangle x:Name="DetectionLight1" Width="50" Height="10" Fill="Red" />
+                    <Rectangle x:Name="DetectionLight2" Width="50" Height="10" Fill="Red" />
+                    <Rectangle x:Name="DetectionLight3" Width="50" Height="10" Fill="Red" />
+                    <Rectangle x:Name="DetectionLightx" Width="50" Height="10" Fill="Red" />
+                    <Label x:Name="TimerLabel"></Label>
+                    <Label x:Name="CoordDataLabel"></Label>
+                </StackPanel>
+                <!--<dtwVisualizationWpf:DtwByVariablePlot Dtw="{Binding Dtw}" DockPanel.Dock="Top" />-->
+            </GroupBox>
+        </DockPanel>
+    </Grid>
+</Window>
