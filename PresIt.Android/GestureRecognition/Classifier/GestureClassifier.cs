@@ -1,11 +1,32 @@
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
+using System.Xml;
+using System.Xml.Serialization;
 using PresIt.Android.GestureRecognition.Classifier.FeatureExtraction;
 
 namespace PresIt.Android.GestureRecognition.Classifier {
     public class GestureClassifier {
         private List<Gesture> trainingSet;
         public IFeatureExtractor FeatureExtractor { get; set; }
+
+        public string SerializeTrainingSet() {
+            if (trainingSet == null || trainingSet.Count == 0) return "";
+            var stringWriter = new StringWriter();
+            var xmlWriter = new XmlTextWriter(stringWriter);
+            var serializer = new XmlSerializer(typeof(List<Gesture>));
+            serializer.Serialize(xmlWriter, trainingSet);
+            return stringWriter.ToString();
+        }
+
+        public void DeserializeTrainingSet(string data) {
+            trainingSet.Clear();
+            if (string.IsNullOrEmpty(data)) return;
+            var serializer = new XmlSerializer(typeof(List<Gesture>));
+            var stream = new StringReader(data);
+            var other = (List<Gesture>)(serializer.Deserialize(stream));
+            trainingSet.AddRange(other);
+        }
 
         public GestureClassifier(IFeatureExtractor extractor) {
             trainingSet = new List<Gesture>();

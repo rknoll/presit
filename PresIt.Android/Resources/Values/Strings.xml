@@ -9,4 +9,7 @@
   <string name="ExternalSensorTextViewText">External Sensor</string>
   <string name="ManualControlTextViewText">Manual Control</string>
   <string name="TrainingButtonText">Start Training Left</string>
+  <string name="TrainingDataTextViewText">Training Data</string>
+  <string name="TrainingDataSaveButtonText">Save</string>
+  <string name="TrainingDataLoadButtonText">Load</string>
 </resources>

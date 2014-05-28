@@ -14,6 +14,14 @@ namespace PresIt.Android.GestureRecognition {
         private bool isClassifying;
 
         private readonly HashSet<IGestureRecognitionListener> listeners;
+        
+        public string SerializeTrainingSet() {
+            return classifier.SerializeTrainingSet();
+        }
+
+        public void DeserializeTrainingSet(string data) {
+            classifier.DeserializeTrainingSet(data);
+        }
 
         public GestureRecognitionService(ISensorSource source) {
             listeners = new HashSet<IGestureRecognitionListener>();

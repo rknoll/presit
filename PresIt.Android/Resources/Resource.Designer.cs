@@ -90,8 +90,17 @@ namespace PresIt.Android
 			// aapt resource value: 0x7f050006
 			public const int TrainingButton = 2131034118;
 			
+			// aapt resource value: 0x7f05000b
+			public const int TrainingDataLoadButton = 2131034123;
+			
+			// aapt resource value: 0x7f05000a
+			public const int TrainingDataSaveButton = 2131034122;
+			
 			// aapt resource value: 0x7f050009
-			public const int contentFrame = 2131034121;
+			public const int TrainingDataTextView = 2131034121;
+			
+			// aapt resource value: 0x7f05000c
+			public const int contentFrame = 2131034124;
 			
 			static Id()
 			{
@@ -154,6 +163,15 @@ namespace PresIt.Android
 			
 			// aapt resource value: 0x7f040008
 			public const int TrainingButtonText = 2130968584;
+			
+			// aapt resource value: 0x7f04000b
+			public const int TrainingDataLoadButtonText = 2130968587;
+			
+			// aapt resource value: 0x7f04000a
+			public const int TrainingDataSaveButtonText = 2130968586;
+			
+			// aapt resource value: 0x7f040009
+			public const int TrainingDataTextViewText = 2130968585;
 			
 			static String()
 			{

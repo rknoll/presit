@@ -57,4 +57,22 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:id="@+id/ExternalTrainingButton" />
+    <TextView
+        android:text="@string/TrainingDataTextViewText"
+        android:textAppearance="?android:attr/textAppearanceMedium"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:id="@+id/TrainingDataTextView"
+        android:gravity="center"
+        android:layout_marginTop="15px" />
+    <Button
+        android:text="@string/TrainingDataSaveButtonText"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:id="@+id/TrainingDataSaveButton" />
+    <Button
+        android:text="@string/TrainingDataLoadButtonText"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:id="@+id/TrainingDataLoadButton" />
 </LinearLayout>

@@ -104,6 +104,23 @@ namespace PresIt.Android {
                 SetTraining(externalRecognitionService, ref text);
                 externalTrainingButton.Text = text;
             };
+
+            var trainingDataSaveButton = FindViewById<Button>(Resource.Id.TrainingDataSaveButton);
+            trainingDataSaveButton.Click += (sender, e) => {
+                var prefs = PreferenceManager.GetDefaultSharedPreferences(this);
+                var editor = prefs.Edit();
+                editor.PutString("internalRecognitionService", internalRecognitionService.SerializeTrainingSet());
+                editor.PutString("externalRecognitionService", externalRecognitionService.SerializeTrainingSet());
+                editor.Commit();
+            };
+
+            var trainingDataLoadButton = FindViewById<Button>(Resource.Id.TrainingDataLoadButton);
+            trainingDataLoadButton.Click += (sender, e) => {
+                var prefs = PreferenceManager.GetDefaultSharedPreferences(this);
+                if (!prefs.Contains("internalRecognitionService") || !prefs.Contains("externalRecognitionService")) return;
+                internalRecognitionService.DeserializeTrainingSet(prefs.GetString("internalRecognitionService", ""));
+                externalRecognitionService.DeserializeTrainingSet(prefs.GetString("externalRecognitionService", ""));
+            };
         }
 
         private void SetTraining(GestureRecognitionService s, ref string buttonText) {
