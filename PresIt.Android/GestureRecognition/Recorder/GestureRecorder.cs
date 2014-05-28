@@ -14,6 +14,7 @@ namespace PresIt.Android.GestureRecognition.Recorder {
         private const int MinGestureSize = 8;
         public double Threshold { get; set; }
         private bool isRecording;
+        private bool paused;
         private int stepsSinceNoMovement;
         private List<double[]> gestureValues;
         private IGestureRecorderListener listener;
@@ -59,23 +60,22 @@ namespace PresIt.Android.GestureRecognition.Recorder {
             if (IsRunning) return;
             source.SetSensorListener(this);
             IsRunning = true;
+            paused = false;
         }
 
         public void Stop() {
             if (!IsRunning) return;
             source.SetSensorListener(null);
             IsRunning = false;
+            paused = true;
         }
 
         public void Pause(bool b) {
-            if (b) {
-                Stop();
-            } else {
-                Start();
-            }
+            paused = b;
         }
 
         public void OnDataReceived(double[] values) {
+            if (paused) return;
             switch (CurrentRecordMode) {
                 case RecordMode.MotionDetected:
                     if (isRecording) {

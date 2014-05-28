@@ -3,7 +3,9 @@ using System.Threading;
 using Android.App;
 using Android.Bluetooth;
 using Android.Content;
+using Java.IO;
 using Java.Util;
+using Console = System.Console;
 
 namespace PresIt.Android.GestureRecognition.Sensors {
     public class BluetoothSensorSource : ISensorSource {
@@ -55,8 +57,7 @@ namespace PresIt.Android.GestureRecognition.Sensors {
 
             BluetoothSocket socket =
                 device.CreateRfcommSocketToServiceRecord(UUID.FromString("00001101-0000-1000-8000-00805f9b34fb"));
-            socket.Connect();
-
+            
             thread = new Thread(DeviceThread);
             thread.Start(socket);
         }
@@ -78,39 +79,55 @@ namespace PresIt.Android.GestureRecognition.Sensors {
                     return;
                 }
 
+                do {
+                    try {
+                        Console.WriteLine("Connecting..");
+                        socket.Connect();
+                    }
+                    catch (Java.IO.IOException) {
+                    }
+                } while (!socket.IsConnected);
+
+                Console.WriteLine("Connected.");
+                bool receivingData = false;
+
                 while (true) {
                     int b = socket.InputStream.ReadByte();
+                    if (!receivingData) {
+                        receivingData = true;
+                        Console.WriteLine("Receiving Data.");
+                    }
                     if (b == 2) {
                         b = socket.InputStream.ReadByte();
                         if (b < 0) {
                             continue;
                         }
-                        var x = (short) (((short) b) << 8);
+                        var x = (short) b;
                         b = socket.InputStream.ReadByte();
                         if (b < 0) {
                             continue;
                         }
-                        x |= ((short) b);
+                        x |= (short) (((short)b) << 8);
                         b = socket.InputStream.ReadByte();
                         if (b < 0) {
                             continue;
                         }
-                        var y = (short) (((short) b) << 8);
+                        var y = (short) b;
                         b = socket.InputStream.ReadByte();
                         if (b < 0) {
                             continue;
                         }
-                        y |= ((short) b);
+                        y |= (short) (((short)b) << 8);
                         b = socket.InputStream.ReadByte();
                         if (b < 0) {
                             continue;
                         }
-                        var z = (short) (((short) b) << 8);
+                        var z = (short) b;
                         b = socket.InputStream.ReadByte();
                         if (b < 0) {
                             continue;
                         }
-                        z |= ((short) b);
+                        z |= (short) (((short)b) << 8);
                         b = socket.InputStream.ReadByte();
                         if (b == 3) {
                             double[] values = {
@@ -127,6 +144,7 @@ namespace PresIt.Android.GestureRecognition.Sensors {
             }
             catch (ThreadAbortException) {
             }
+            Console.WriteLine("Thread Finished.");
         }
     }
 }

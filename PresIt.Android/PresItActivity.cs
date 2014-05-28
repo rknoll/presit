@@ -131,17 +131,32 @@ namespace PresIt.Android {
 
         // switch to next slide
         private void NextSlide() {
-            new Thread(() => service.SendCommand(clientId, CommandType.NextSlide)).Start();
+            new Thread(() => {
+                try {
+                    service.SendCommand(clientId, CommandType.NextSlide);
+                } catch (TimeoutException) { 
+                }
+            }).Start();
         }
 
         // switch to previous slide
         private void PreviousSlide() {
-            new Thread(() => service.SendCommand(clientId, CommandType.PreviousSlide)).Start();
+            new Thread(() => {
+                try {
+                    service.SendCommand(clientId, CommandType.PreviousSlide);
+                } catch (TimeoutException) { 
+                }
+            }).Start();
         }
         
         // pause / unpause presentation
         private void SwitchPause() {
-            new Thread(() => service.SendCommand(clientId, CommandType.Pause)).Start();
+            new Thread(() => {
+                try {
+                    service.SendCommand(clientId, CommandType.Pause);
+                } catch (TimeoutException) { 
+                }
+            }).Start();
         }
 
         // server connection initialization
